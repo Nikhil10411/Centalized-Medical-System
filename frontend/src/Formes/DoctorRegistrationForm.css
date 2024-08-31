@@ -1,0 +1,48 @@
+/* DoctorRegistrationForm.css */
+
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url('C:\Users\saini\Desktop\MedicalApp\frontend\src\assets\doctors-8881540_640.jpg'); 
+  background-size: cover;
+  background-position: center;
+}
+
+.doctor-registration-form {
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.form-heading {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.doctor-registration-form input,
+.doctor-registration-form select,
+.doctor-registration-form button {
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.doctor-registration-form button {
+  background-color: #a18cd1; /* Gradient color */
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.doctor-registration-form button:hover {
+  background-color: #fbc2eb; /* Hover gradient color */
+}

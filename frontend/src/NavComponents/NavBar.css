@@ -1,0 +1,128 @@
+.active {
+    color: #fbc2eb; 
+    background-color: #ffffff;
+  font-weight: bold;
+}
+
+nav{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to right, #a18cd1, #fbc2eb);
+    position: sticky;
+    top: 0;
+
+}
+.title{
+    font-size: 1.5rem;
+    margin: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+.title:hover{
+    color: #441f92 ;
+}
+nav ul{
+    display: flex;
+}
+nav ul li {
+    list-style: none;
+}
+nav ul li a {
+    display: block;
+    text-decoration: none;
+    color: #ffffff; /* Regular link color */
+    transition: color 0.3s ease;
+    padding: 0.5rem;
+    margin: 0 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+}
+nav ul li a:not(.active):hover {
+    color: #fbc2eb; 
+  background-color: #ffffff;
+}
+.search{
+    display: flex;
+    max-width: 400px; 
+    margin: 8px auto;
+}
+.search input {
+    border-radius: 40px;
+    padding: 9px 18px;
+    color: #a18cd1;
+    border: none;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.search-input:focus {
+    border: 2px solid #a18cd1;
+    box-shadow: 0 4px 8px rgba(161, 140, 209, 1);
+    outline: none;
+  }
+
+nav .menu {
+    display: none;
+    position: absolute;
+    top: 0.75rem;
+    right: 0.5rem;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 2.25rem;
+    height: 2rem;
+}
+nav .menu span {
+    height: 0.4rem;
+    width: 100%;
+    background-color:white ;
+    border-radius: 0.2rem;
+}
+
+@media (max-width: 736px) {
+    nav .menu {
+        display: flex;
+    }
+    nav {
+        flex-direction: column;
+        align-items: start;
+    }
+    nav ul {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+    nav ul.open {
+        display: flex;
+    }
+    nav ul li {
+        width: 100%;
+        text-align: center;
+    }
+    nav ul li a {
+        margin: 0.2rem 0.5rem; 
+    }
+    .search {
+        margin: 20px auto;
+    }
+    
+}
+
+@media (max-width: 1056px) {
+    nav ul li {
+        font-size: 0.8rem;
+    }
+    nav ul li a {
+        margin: 0 0.2rem;
+    }
+    .title{
+        font-size: 1.1rem;
+        margin: 1rem;
+    }
+    .search input {
+        font-size: 12px;
+        padding: 8px 15px;
+    }
+    
+}

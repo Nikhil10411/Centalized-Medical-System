@@ -1,0 +1,83 @@
+/* SignUp.css */
+
+/* Container for the entire signup form */
+.signup-container {
+  background-image: url('C:\Users\saini\Desktop\MedicalApp\frontend\src\assets\SignUp2.jpeg'); /* Add the background image */
+  background-size: cover; /* Ensure the image covers the entire container */
+  background-position: center; /* Center the background image */
+  height: 100vh; /* Full viewport height */
+  display: flex; /* Flexbox for centering */
+  justify-content: center; /* Center the form horizontally */
+  align-items: center; /* Center the form vertically */
+  padding: 20px; /* Add padding for small screens */
+}
+
+/* Container for the form itself */
+.signup-form {
+  background: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
+  padding: 40px; /* Space inside the form */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+  width: 100%;
+  max-width: 400px; /* Set a maximum width for the form */
+}
+
+/* Form heading */
+.signup-heading {
+  color: #4c4c4c; /* Dark grey color */
+  margin-bottom: 20px; /* Space below the heading */
+  text-align: center; /* Center the heading */
+}
+
+/* Container for each input field and label */
+.signup-input-container {
+  margin-bottom: 20px; /* Space below each input field */
+}
+
+.signup-input-container label {
+  display: block; /* Ensure label takes full width */
+  margin-bottom: 8px; /* Space below the label */
+  font-weight: bold; /* Make the label text bold */
+}
+
+/* Input fields */
+.signup-input-container input[type="text"],
+.signup-input-container input[type="email"],
+.signup-input-container input[type="password"] {
+  width: 100%; /* Full width */
+  padding: 10px; /* Space inside the input field */
+  border: 1px solid #ccc; /* Light grey border */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size for the text */
+}
+
+.signup-input-container input[type="text"]:focus,
+.signup-input-container input[type="email"]:focus,
+.signup-input-container input[type="password"]:focus {
+  border-color: #a18cd1; /* Change border color on focus */
+  outline: none; /* Remove the outline */
+}
+
+/* Submit button */
+.signup-button {
+  width: 100%; /* Full width */
+  padding: 12px; /* Space inside the button */
+  background-color: #a18cd1; /* Initial background color */
+  color: white; /* White text */
+  font-size: 16px; /* Font size */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+.signup-button:hover {
+  background-color: #fbc2eb; /* Change background color on hover */
+}
+
+@media (max-width: 768px) {
+  .signup-form {
+    width: 90%; /* Responsive width for smaller screens */
+    padding: 20px; /* Adjust padding */
+  }
+}

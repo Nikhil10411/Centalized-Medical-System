@@ -1,0 +1,90 @@
+.carousel-container {
+  overflow: hidden;
+  position: relative; 
+  width: 100%;
+  padding-bottom: 30px;  
+}
+
+.slick-dots {
+  bottom: 15px;
+  text-align: center;
+  z-index: 3;
+}
+
+.slick-dots li button:before {
+  font-size: 12px;
+  color: #2F4F4F;
+  opacity: 0.75;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #a18cd1;
+  opacity: 1;
+}
+
+.slick-slide {
+  position: relative;
+}
+
+.slick-prev, .slick-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: block !important;
+  z-index: 3;
+}
+
+.slick-prev {
+  left: 10px;
+}
+
+.slick-next {
+  right: 20px;
+}
+
+.slick-prev:before, .slick-next:before {
+  font-size: 30px;
+  color: #a18cd1;
+}
+
+img {
+  width: 100%;
+  height: 400px;
+  display: block;
+  z-index: 1;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 2;
+}
+
+.overlay h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+.overlay h2:hover {
+  color:#441f92 ;
+}
+
+.overlay button {
+  padding: 10px 20px;
+  background: linear-gradient(to right, #a18cd1, #fbc2eb);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: bolder;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.overlay button:hover {
+  background: linear-gradient(to right, #fbc2eb, #a18cd1);
+}
