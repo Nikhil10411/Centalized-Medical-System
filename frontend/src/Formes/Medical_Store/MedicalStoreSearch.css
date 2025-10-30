@@ -1,0 +1,244 @@
+/* =====================
+   Container
+===================== */
+.store-search-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #1a223f;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* =====================
+   Title
+===================== */
+.search-form h2 {
+  text-align: center;
+  background: #00d8ff;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+/* =====================
+   Grid for filters
+===================== */
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.search-grid input {
+  padding: 0.75rem;
+  border: 2px solid #00d8ff;
+  border-radius: 0.8rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.search-grid input:focus {
+  border-color: #00d8ff;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  outline: none;
+}
+
+/* =====================
+   Location Row
+===================== */
+.location-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.location-row input {
+  flex: 1;
+  padding: 0.7rem;
+  border-radius: 0.8rem;
+  border: 2px solid #00d8ff;
+  transition: border 0.2s ease;
+}
+
+.location-row input:focus {
+  border-color: #00d8ff;
+  outline: none;
+}
+
+.btn-location {
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 0.8rem;
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.btn-location:hover {
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+  opacity: 0.9;
+}
+
+/* =====================
+   Search Button
+===================== */
+.btn-search {
+  width: 100%;
+  padding: 0.9rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  border: none;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.btn-search:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+  opacity: 0.95;
+}
+
+/* =====================
+   Results Grid
+===================== */
+.results-container {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.8rem;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* =====================
+   Store Card
+===================== */
+.store-card {
+  background: linear-gradient(180deg, #fafafa 0%, #f3eaff 100%);
+  border-radius: 1.2rem;
+  box-shadow: 0 6px 24px rgba(0, 216, 255, 0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 28px rgba(0, 216, 255, 0.6);
+}
+
+/* =====================
+   Store Photo
+===================== */
+.store-photo {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 3px solid #00d8ff;
+  transition: transform 0.4s ease;
+}
+
+.store-card:hover .store-photo {
+  transform: scale(1.05);
+}
+
+.store-photo-placeholder {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, #1a223f, #00d8ff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: bold;
+  border-bottom: 3px solid #00d8ff;
+}
+
+/* =====================
+   Store Info
+===================== */
+.store-info {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.store-card h3 {
+  color: #00d8ff;
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+  transition: color 0.3s ease;
+}
+
+.store-card:hover h3 {
+  color: #1a223f;
+}
+
+.store-card p {
+  margin: 0.3rem 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.store-card strong {
+  color: #00d8ff;
+}
+
+/* =====================
+   Animations
+===================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================
+   Responsive
+===================== */
+@media (max-width: 1024px) {
+  .results-container {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .results-container {
+    grid-template-columns: 1fr;
+  }
+
+  .store-photo,
+  .store-photo-placeholder {
+    height: 160px;
+  }
+
+  .store-info {
+    padding: 0.8rem;
+  }
+
+  .btn-location {
+    width: 100%;
+    text-align: center;
+  }
+}

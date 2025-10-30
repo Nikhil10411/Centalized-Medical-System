@@ -1,0 +1,44 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  # Keeps track of read positions to resume log scraping after restart
+  filename: /tmp/positions.yaml
+
+clients:
+  # The URL points to the Loki service defined in docker-compose.yml
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # --- 1. Scrape Host/System Logs (using /var/log volume) ---
+  - job_name: varlogs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*log
+
+  # --- 2. Scrape Docker Container Logs (using docker.sock volume) ---
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    # Relabeling extracts metadata like container name and log path
+    relabel_configs:
+      # Use the container name as the 'instance' label
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'instance'
+      # Keep logs from all containers
+      - source_labels: ['__meta_docker_container_name']
+        regex: '(.+)'
+        target_label: 'container_name'
+      # Add the service name (e.g., medical-backend) as a label
+      - source_labels: ['__meta_docker_swarm_service_name']
+        regex: '(.+)'
+        target_label: 'service_name'
+      # Set the job label to 'containerlogs'
+      - replacement: 'containerlogs'
+        target_label: 'job'

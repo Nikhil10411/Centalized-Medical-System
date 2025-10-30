@@ -1,0 +1,41 @@
+global:
+  # How frequently to scrape targets by default.
+  scrape_interval: 15s
+  # Default timeout when scraping targets.
+  evaluation_interval: 15s
+  # Scrape Prometheus itself
+  external_labels:
+    monitor: 'docker-stack'
+
+scrape_configs:
+  # --- 1. Prometheus Server Metrics ---
+  # Scrapes configuration for Prometheus itself (running on localhost:9090 within its container)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # --- 2. FastAPI Backend Metrics ---
+  # Scrapes metrics exposed by the medical-backend service.
+  # Note: The service name in docker-compose is 'medical-backend'.
+  - job_name: 'medical-backend'
+    static_configs:
+      - targets: ['medical-backend:8000'] 
+
+  # --- 3. Loki Metrics (Log Server) ---
+  # Scrapes internal metrics from the Loki service for monitoring its health/performance.
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+
+  # --- 4. Promtail Metrics (Log Agent) ---
+  # Scrapes internal metrics from the Promtail service.
+  - job_name: 'promtail'
+    static_configs:
+      - targets: ['promtail:9080']
+
+  # --- 5. Grafana Metrics (Optional) ---
+  # Scrapes internal metrics from the Grafana service.
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+

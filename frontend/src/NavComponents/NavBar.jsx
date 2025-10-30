@@ -1,63 +1,168 @@
-import React ,{ useState }from 'react';
-import './NavBar.css';
-import {BrowserRouter as Router,Route,Routes,Link, NavLink} from 'react-router-dom';
-import {FaSearch} from 'react-icons/fa';
-import Home from '../Pages/Home';
-import About from '../Pages/About';
-import Contact from '../Pages/Contact';
-import Services from '../Pages/Services';
-import Login from '../Pages/Login';
-import SignUp from '../Pages/SignUp';
-import UserRegistrationForm from '../Formes/UserRegistrationForm';
-import DoctorRegistrationForm from '../Formes/DoctorRegistrationForm';
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { FaSearch, FaUserCircle, FaShoppingCart } from 'react-icons/fa';
+import styles from './NavBar.module.css';
 
-function NavBar() {
-  const [menuOpen, setMenuOpen] = useState(false)
+function NavBar({ isLoggedIn = false, onLogout }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [cartCount, setCartCount] = useState(0);
+  const navigate = useNavigate();
+
+  // ✅ Load initial cart count from localStorage
+  useEffect(() => {
+    const savedCount = parseInt(localStorage.getItem("cart_count")) || 0;
+    setCartCount(savedCount);
+
+    // ✅ Listen to custom cart updates (from ProductList)
+    const handleCartUpdate = (e) => {
+      setCartCount(e.detail || 0);
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    return () => window.removeEventListener("cartUpdated", handleCartUpdate);
+  }, []);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchText.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchText.trim())}`);
+    }
+    setMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    onLogout?.();
+    localStorage.removeItem("access_token");
+    setMenuOpen(false);
+  };
+
   return (
-    <> <Router>
-     
-       
-        <nav>
-        <Link to="/" className='title'>Meadical App</Link>
-          <div className='menu' onClick={() => {
-            setMenuOpen(!menuOpen);
-          }}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div className='search'>
-        <input type='text' placeholder='Search...' className='search-input'/>
-        
-      </div>
-      <ul className={menuOpen ? "open" : ""}>
-        <li><NavLink to="/">Home</NavLink></li>
-        <li><NavLink to="/about">About</NavLink></li>
-        <li><NavLink to="/contact">Contact Us</NavLink></li>
-        <li><NavLink to="/services">Services</NavLink></li>
-        <li><NavLink to="/log in">Log in</NavLink></li>
-        <li><NavLink to="/sign up">Sign Up</NavLink></li>
-      </ul>
-      
-    </nav>
-    
-       
-    <Routes>
-      <Route path='/' element={<Home />}/>
-      <Route path='/about' element={<About />}/>
-      <Route path='/contact' element={<Contact />}/>
-      <Route path='/services' element={<Services />}/>
-      <Route path='/log in' element={<Login/>}/>
-      <Route path='/sign up' element={<SignUp/>}/>
-     <Route path='/user registration' element={<UserRegistrationForm/>}/>
-     <Route path='/doctor registration' element={<DoctorRegistrationForm/>}/>
-     
-    </Routes>
-  </Router>
-    
+    <nav className={styles.navbar}>
+      {/* Logo */}
+      <Link to="/" className={styles.logoContainer} aria-label="Aroven Home">
+        <img src="/Aroven2.jpeg" alt="Aroven Logo" className={styles.logoImg} />
+      </Link>
 
-    </>
-  )
+      {/* Search (Desktop) */}
+      <form
+        onSubmit={handleSearchSubmit}
+        className={`${styles.search} ${styles.desktopSearch}`}
+        aria-label="Search"
+      >
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          className={styles.searchInput}
+        />
+        <button type="submit" className={styles.searchBtn}>
+          <FaSearch />
+        </button>
+      </form>
+
+      {/* Nav Links */}
+      <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ''}`}>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeNav}` : styles.navLink
+            }
+            onClick={() => setMenuOpen(false)}
+          >
+            Home
+          </NavLink>
+        </li>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeNav}` : styles.navLink
+            }
+            onClick={() => setMenuOpen(false)}
+          >
+            About
+          </NavLink>
+        </li>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeNav}` : styles.navLink
+            }
+            onClick={() => setMenuOpen(false)}
+          >
+            Contact Us
+          </NavLink>
+        </li>
+        <li className={styles.navItem}>
+          <NavLink
+            to="/services"
+            className={({ isActive }) =>
+              isActive ? `${styles.navLink} ${styles.activeNav}` : styles.navLink
+            }
+            onClick={() => setMenuOpen(false)}
+          >
+            Services
+          </NavLink>
+        </li>
+
+        {/* Login / Logout */}
+        <li className={styles.navItem}>
+          {isLoggedIn ? (
+            <span
+              className={`${styles.navLink} ${styles.logoutLink}`}
+              onClick={handleLogout}
+            >
+              Log out
+            </span>
+          ) : (
+            <NavLink
+              to="/auth"
+              className={({ isActive }) =>
+                isActive ? `${styles.navLink} ${styles.activeNav}` : styles.navLink
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              Log in
+            </NavLink>
+          )}
+        </li>
+      </ul>
+
+      {/* Icons: Cart + User */}
+      <div className={styles.iconsContainer}>
+        <Link to="/cart" className={styles.cartIcon}>
+          <FaShoppingCart size={26} />
+          {cartCount > 0 && (
+            <span className={styles.cartCount}>{cartCount}</span>
+          )}
+        </Link>
+        <div className={styles.userIcon}>
+          <FaUserCircle size={27} />
+        </div>
+      </div>
+
+      {/* Mobile Menu Toggle */}
+      <div
+        className={`${styles.menuToggle} ${menuOpen ? styles.open : ''}`}
+        onClick={() => setMenuOpen(!menuOpen)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={menuOpen}
+        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        onKeyDown={(e) => e.key === 'Enter' && setMenuOpen(!menuOpen)}
+      >
+        <span className={styles.menuBar}></span>
+        <span className={styles.menuBar}></span>
+        <span className={styles.menuBar}></span>
+      </div>
+    </nav>
+  );
 }
 
-export default NavBar
+export default NavBar;
+

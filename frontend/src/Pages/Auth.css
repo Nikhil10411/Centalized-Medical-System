@@ -1,0 +1,124 @@
+
+
+/* Background */
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+  background-size: 300% 300%;
+  animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Card */
+.auth-card, .logout-card {
+  background: rgba(0, 31, 63, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 40px 35px;
+  width: 100%;
+  max-width: 420px;
+  color: var(--text-light);
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover, .logout-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px 0 rgba(0,216,255,0.35);
+}
+
+/* Headings */
+.auth-card h2, .logout-card h2 {
+  margin-bottom: 25px;
+  font-size: 2rem;
+  color: var(--primary-light);
+  letter-spacing: 1px;
+}
+
+/* Inputs */
+.auth-card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-light);
+  outline: none;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.auth-card input::placeholder {
+  color: #cfd8dc;
+}
+
+.auth-card input:focus {
+  background: rgba(0, 216, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0,216,255,0.35);
+}
+
+/* Buttons */
+.auth-card button, .logout-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, #007cf0, #00dfd8);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s;
+}
+
+.auth-card button:hover, .logout-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 216, 255, 0.45);
+}
+
+/* Links */
+.auth-card p, .logout-card p {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #cfd8dc;
+}
+
+.auth-card span, .logout-card span {
+  color: var(--primary-light);
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.auth-card span:hover, .logout-card span:hover {
+  color: var(--success);
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .auth-card, .logout-card {
+    padding: 25px 20px;
+  }
+
+  .auth-card h2, .logout-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .auth-card input,
+  .auth-card button,
+  .logout-btn {
+    font-size: 0.95rem;
+  }
+}

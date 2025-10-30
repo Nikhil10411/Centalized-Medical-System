@@ -1,0 +1,163 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+  background: rgba(0, 31, 63, 0.65);
+  box-shadow: 0 8px 32px rgba(0,216,255,0.18);
+  border-radius: 24px;
+  color: white;
+}
+
+.patient-profile-card {
+  display: flex;
+  align-items: center;
+  background: rgba(0,31,63,0.85);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,216,255,0.15);
+  margin-bottom: 30px;
+  padding: 24px;
+}
+
+.patient-avatar {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #00d8ff;
+  margin-right: 28px;
+  background: #101f37;
+}
+
+.patient-details h2 {
+  color: #00d8ff;
+  margin: 0 0 8px 0;
+}
+.patient-details p {
+  margin: 3px 0;
+}
+
+.profile-actions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-edit, .btn-photo {
+  background: linear-gradient(to right, #00bcd4, #00d8ff);
+  color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: background 0.3s;
+}
+.btn-edit:hover, .btn-photo:hover {
+  background: linear-gradient(to right, #00d8ff, #00bcd4);
+}
+
+.microservice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 30px 0 10px 0;
+  justify-content: center;
+}
+
+.microservice-btn {
+  background: rgba(0, 31, 63, 0.90);
+  color: #00d8ff;
+  border: 2px solid #00d8ff;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 18px 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.3s, color 0.3s;
+}
+.microservice-btn:hover {
+  background: #00d8ff;
+  color: #001f3f;
+}
+
+.svc-icon {
+  font-size: 1.7rem;
+}
+
+.appointment-section {
+  background: rgba(0,31,63,0.70);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 30px 0;
+  box-shadow: 0 2px 10px rgba(0,216,255,0.10);
+}
+.appointment-section h3 {
+  color: #00d8ff;
+  margin-bottom: 16px;
+}
+.appointment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+.appt-btn {
+  background: linear-gradient(to right, #00bcd4, #00d8ff);
+  color: white;
+  border: none;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.appt-btn:hover {
+  background: linear-gradient(to right, #00d8ff, #00bcd4);
+  color: #001f3f;
+}
+
+.medical-history {
+  background: rgba(0,31,63,0.70);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 30px 0;
+  box-shadow: 0 2px 10px rgba(0,216,255,0.10);
+}
+.medical-history h3 {
+  color: #00d8ff;
+  margin-bottom: 10px;
+}
+
+.medical-history ul {
+  list-style: none;
+  padding-left: 0;
+}
+.medical-history li {
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(0,216,255,0.15);
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 8px;
+  }
+  .patient-profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+  .profile-actions {
+    flex-direction: row;
+    margin-left: 0;
+    gap: 10px;
+  }
+  .microservice-btn, .appt-btn {
+    padding: 12px 18px;
+    font-size: 0.96rem;
+  }
+}

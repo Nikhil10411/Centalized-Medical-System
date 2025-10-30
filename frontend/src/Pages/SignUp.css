@@ -1,83 +1,126 @@
-/* SignUp.css */
-
-/* Container for the entire signup form */
+/* Background container */
 .signup-container {
-  background-image: url('C:\Users\saini\Desktop\MedicalApp\frontend\src\assets\SignUp2.jpeg'); /* Add the background image */
-  background-size: cover; /* Ensure the image covers the entire container */
-  background-position: center; /* Center the background image */
-  height: 100vh; /* Full viewport height */
-  display: flex; /* Flexbox for centering */
-  justify-content: center; /* Center the form horizontally */
-  align-items: center; /* Center the form vertically */
-  padding: 20px; /* Add padding for small screens */
+  background-image: url('/hospital-3582607_640.jpg'); /* from public/ */
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
-/* Container for the form itself */
+/* Signup card */
 .signup-form {
-  background: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
-  padding: 40px; /* Space inside the form */
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+  background: rgba(0, 31, 63, 0.85);
+  padding: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 216, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
   width: 100%;
-  max-width: 400px; /* Set a maximum width for the form */
+  max-width: 400px;
+  transition: transform 0.3s ease;
 }
 
-/* Form heading */
+.signup-form:hover {
+  transform: translateY(-2px);
+}
+
+/* Heading */
 .signup-heading {
-  color: #4c4c4c; /* Dark grey color */
-  margin-bottom: 20px; /* Space below the heading */
-  text-align: center; /* Center the heading */
+  color: #00d8ff;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 24px;
+  
 }
 
-/* Container for each input field and label */
+/* Input container */
 .signup-input-container {
-  margin-bottom: 20px; /* Space below each input field */
+  margin-bottom: 20px;
 }
 
 .signup-input-container label {
-  display: block; /* Ensure label takes full width */
-  margin-bottom: 8px; /* Space below the label */
-  font-weight: bold; /* Make the label text bold */
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #00d8ff;
 }
 
-/* Input fields */
-.signup-input-container input[type="text"],
-.signup-input-container input[type="email"],
-.signup-input-container input[type="password"] {
-  width: 100%; /* Full width */
-  padding: 10px; /* Space inside the input field */
-  border: 1px solid #ccc; /* Light grey border */
-  border-radius: 5px; /* Rounded corners */
-  font-size: 16px; /* Font size for the text */
+/* Inputs + dropdown */
+.signup-input-container input,
+.signup-input-container select {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 31, 63, 0.85);
+  border: 1px solid rgba(0, 216, 255, 0.3);
+  border-radius: 5px;
+  font-size: 16px;
+  color: #00d8ff;
+  appearance: none; /* for consistent select styling */
+  transition: all 0.3s ease;
 }
 
-.signup-input-container input[type="text"]:focus,
-.signup-input-container input[type="email"]:focus,
-.signup-input-container input[type="password"]:focus {
-  border-color: #a18cd1; /* Change border color on focus */
-  outline: none; /* Remove the outline */
+.signup-input-container input:focus,
+.signup-input-container select:focus {
+  border-color: #00d8ff;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  outline: none;
+  background: rgba(0, 31, 63, 0.95);
 }
 
-/* Submit button */
+/* Dropdown options */
+.signup-input-container select option {
+  background: #1a223f;
+  color: #00d8ff;
+  padding: 8px;
+}
+
+.signup-input-container select option:hover {
+  background: #00d8ff;
+  color: #000000;
+}
+
+/* Button */
 .signup-button {
-  width: 100%; /* Full width */
-  padding: 12px; /* Space inside the button */
-  background-color: #a18cd1; /* Initial background color */
-  color: white; /* White text */
-  font-size: 16px; /* Font size */
-  border: none; /* Remove border */
-  border-radius: 5px; /* Rounded corners */
-  cursor: pointer; /* Pointer cursor on hover */
-  transition: background-color 0.3s ease; /* Smooth transition for hover */
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s ease;
 }
 
 .signup-button:hover {
-  background-color: #fbc2eb; /* Change background color on hover */
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  transform: translateY(-2px);
 }
 
+/* Success/Error message */
+.signup-success {
+  color: #00ffae;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.signup-error {
+  color: #ff4e4e;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .signup-form {
-    width: 90%; /* Responsive width for smaller screens */
-    padding: 20px; /* Adjust padding */
+    width: 90%;
+    padding: 20px;
   }
 }

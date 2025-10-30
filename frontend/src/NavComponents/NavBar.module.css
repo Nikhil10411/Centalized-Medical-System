@@ -1,0 +1,297 @@
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--premium-gradient);
+  padding: 0.5rem 1.5rem;
+  height: var(--header-height);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 14px rgba(24, 24, 95, 0.18);
+  flex-wrap: wrap; /* Allows wrapping on smaller screens if needed */
+}
+
+/* --- LOGO --- */
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+.logoImg {
+  height: 50px;
+  object-fit: contain;
+  transition: transform 0.3s ease-in-out;
+}
+.logoImg:hover {
+  transform: scale(1.07);
+}
+
+
+/* --- NAVIGATION LINKS (Desktop & Mobile Menu) --- */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  z-index: 1001;
+}
+
+.navLink {
+  position: relative;
+  padding: 6px 12px;
+  text-decoration: none;
+  font-weight: bold;
+  color: var(--link-color);
+  transition: color 0.3s;
+  user-select: none;
+}
+.navLink::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--hover-color);
+  transition: width 0.3s ease;
+}
+.navLink:hover::after,
+.activeNav::after {
+  width: 100%;
+}
+.navLink:hover {
+  color: var(--hover-color);
+}
+
+/* Logout link red hover */
+.logoutLink {
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.logoutLink:hover {
+  color: var(--logout-hover);
+}
+.activeNav {
+  color: var(--hover-color);
+}
+
+
+/* --- SEARCH BAR (Desktop) --- */
+.search {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50px;
+  padding: 3px 5px;
+  transition: all 0.3s;
+}
+.searchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #00d8ff;
+  padding: 5px;
+  font-weight: 500;
+  min-width: 140px;
+  font-size: 1rem;
+}
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+.searchBtn {
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.searchBtn:hover {
+  color: var(--hover-color);
+}
+
+
+/* --- ICONS (Desktop) --- */
+.iconsContainer {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+.cartIcon {
+  color: #fff;
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.cartIcon:hover {
+  color: var(--hover-color);
+}
+.cartCount {
+  position: absolute;
+  top: -7px;
+  right: -13px;
+  background: #00d8ff;
+  color: #1a223f;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.userIcon {
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+.userIcon:hover {
+  transform: scale(1.1);
+}
+
+
+/* --- HAMBURGER MENU TOGGLE --- */
+.menuToggle {
+  display: none; /* Hidden on desktop */
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  z-index: 1002;
+}
+.menuBar {
+  background: #fff;
+  height: 3px;
+  width: 25px;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+.menuToggle.open .menuBar:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.menuToggle.open .menuBar:nth-child(2) {
+  opacity: 0;
+}
+.menuToggle.open .menuBar:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+
+/* --------------------------------------------------- */
+/* --- MEDIUM DEVICES (iPad, small laptops) - max 900px --- */
+/* --------------------------------------------------- */
+@media (max-width: 900px) {
+  /* Hide desktop-specific elements */
+  .search.desktopSearch,
+  .iconsContainer {
+    display: none; 
+  }
+
+  /* Show mobile menu toggle */
+  .menuToggle {
+    display: flex;
+  }
+  
+  /* Navigation Links default to full width (mobile menu styling) */
+  .navLinks {
+    position: absolute;
+    top: var(--header-height);
+    right: 0;
+    flex-direction: column;
+    background: var(--background-blur);
+    width: 100%;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+  .navLinks.open {
+    max-height: 500px; /* Increased height to accommodate new links */
+    opacity: 1;
+    padding: 1rem 0;
+    box-shadow: 0 8px 20px rgba(26, 34, 63, 0.22);
+  }
+  .navItem {
+    width: 100%;
+    text-align: center;
+  }
+  .navLink {
+    display: flex; /* Change to flex for mobile link centering/spacing */
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    font-size: 1.12rem;
+    width: 100%;
+  }
+
+  /* Mobile Search Bar inside the open menu */
+  .search.mobileSearch {
+    display: flex;
+    width: 90%;
+    margin: 0.5rem auto 0.8rem auto;
+  }
+  .mobileSearchItem {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* --- MOBILE CART LINK (Styled like a nav link) --- */
+  .mobileCart {
+    margin: 0.5rem 0;
+    display: flex;
+    justify-content: center;
+  }
+  /* The Link component now uses .navLink, so we just add spacing */
+  .mobileCart .navLink {
+    gap: 8px; /* Spacing between icon, text, and count */
+    padding: 1rem 0; /* Keep the padding */
+  }
+
+  /* Show the cart icon and text inside the mobile menu */
+  .mobileCartIcon {
+      color: var(--link-color); /* Icon color */
+  }
+  .mobileCartText {
+    display: inline; 
+  }
+  .mobileCartCount {
+    display: inline;
+    font-size: 1.12rem;
+    font-weight: bold;
+    color: var(--hover-color); /* Highlight the count */
+  }
+
+  /* Hide the desktop cart bubble styling */
+  .mobileCart .cartCount {
+    display: none; 
+  }
+}
+
+/* --------------------------------------------------- */
+/* --- SMALL DEVICES (Phones) - max 600px --- */
+/* --------------------------------------------------- */
+@media (max-width: 600px) {
+    /* Reduce padding on the navbar itself */
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+
+    /* Reduce logo size slightly */
+    .logoImg {
+        height: 40px;
+    }
+    
+    /* Ensure the mobile search input is compact */
+    .search.mobileSearch .searchInput {
+        min-width: 100px;
+    }
+}

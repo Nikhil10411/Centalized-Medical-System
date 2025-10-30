@@ -1,0 +1,118 @@
+.delete-store-container {
+  max-width: 520px;
+  margin: 45px auto;
+  padding: 30px;
+  background: #1a223f;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  color: #00d8ff;
+}
+
+.delete-store-content {
+  text-align: center;
+}
+
+.delete-store-content h2 {
+  margin-bottom: 18px;
+  color: #00d8ff;
+}
+
+.delete-desc {
+  margin-bottom: 28px;
+  color: #84e3ff;
+  font-size: 15px;
+}
+
+.btn-delete-store {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.btn-delete-store:hover {
+  transform: scale(1.025);
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+}
+
+.delete-confirm-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26,34,63, 0.84);
+  z-index: 100;
+}
+
+.delete-confirm-box {
+  background: #232c4c;
+  border-radius: 15px;
+  padding: 28px 28px 20px 28px;
+  min-width: 312px;
+  text-align: center;
+  box-shadow: 0 4px 30px rgba(0, 216, 255, 0.6);
+}
+
+.delete-confirm-box h4 {
+  color: #00d8ff;
+  margin-bottom: 12px;
+}
+
+.delete-confirm-box p {
+  color: #97f1ff;
+  margin-bottom: 23px;
+  font-size: 14px;
+}
+
+.btn-confirm-delete {
+  padding: 11px 28px;
+  background: #ff3b3b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  margin-right: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(255,59,59,0.22);
+  transition: background 0.2s;
+}
+
+.btn-confirm-delete:hover {
+  background: #e62020;
+}
+
+.btn-cancel-delete {
+  padding: 11px 28px;
+  background: #1a223f;
+  color: #00d8ff;
+  border: 1px solid #00d8ff;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-cancel-delete:hover {
+  background: #00d8ff;
+  color: #1a223f;
+}
+
+@media (max-width: 600px) {
+  .delete-store-container {
+    padding: 15px;
+    max-width: 98vw;
+  }
+  .delete-confirm-box {
+    min-width: 90vw;
+    padding: 18px 8vw 16px 8vw;
+  }
+}

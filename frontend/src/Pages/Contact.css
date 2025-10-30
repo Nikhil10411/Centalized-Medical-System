@@ -1,0 +1,163 @@
+.contact-container {
+  max-width: 420px;
+  margin: 2rem auto;
+  padding: 32px;
+  background: #1a223f; /* Dark theme background */
+  border-radius: 16px;
+  box-shadow: 0 6px 28px rgba(0, 216, 255, 0.3);
+  color: #e1f7ff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: box-shadow 0.3s ease;
+}
+
+.contact-container:hover {
+  box-shadow: 0 8px 36px rgba(0, 216, 255, 0.5);
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 6px;
+  border-radius: 8px;
+  border: 1px solid #00d8ff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f8ff;
+  font-size: 1rem;
+  resize: vertical;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: rgba(224, 247, 255, 0.6);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  background: rgba(0, 216, 255, 0.15);
+  border-color: #00d8ff;
+  outline: none;
+  box-shadow: 0 0 8px #00d8ff;
+  color: #fff;
+  caret-color: #00d8ff;
+}
+
+.contact-form .error {
+  border-color: #e74c3c;
+  background: #2e0811;
+  color: #ff6b6b;
+}
+
+.contact-form button {
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  color: #fff;
+  padding: 12px 0;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 12px;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  transition: background 0.4s ease, box-shadow 0.3s ease;
+}
+
+.contact-form button:hover {
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+  box-shadow: 0 0 24px rgba(0, 216, 255, 0.8);
+}
+
+.error-msg {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-left: 4px;
+  margin-top: -4px;
+  display: block;
+}
+
+.success-animation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #43e97b;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin: 12px 0 0 0;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.7);
+  }
+  80% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.social-links {
+  margin: 24px 0 12px;
+  text-align: center;
+}
+
+.social-links span {
+  color: #00d8ff;
+  font-weight: 600;
+  margin-right: 8px;
+  font-size: 1.05rem;
+}
+
+.social-links a {
+  margin: 0 10px;
+  font-size: 1.5rem;
+  color: #43e97b;
+  transition: color 0.3s ease, transform 0.3s ease;
+  text-decoration: none;
+}
+
+.social-links a:hover {
+  color: #38f9d7;
+  transform: scale(1.15);
+  text-decoration: none;
+}
+
+.map-container {
+  margin-top: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.3);
+  height: 200px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .contact-container {
+    max-width: 95vw;
+    padding: 20px;
+    margin: 1.5rem auto;
+  }
+
+  .contact-form button {
+    font-size: 1rem;
+    padding: 10px 0;
+  }
+
+  .social-links span {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .social-links a {
+    margin: 0 8px;
+    font-size: 1.35rem;
+  }
+
+  .map-container {
+    height: 150px;
+  }
+}

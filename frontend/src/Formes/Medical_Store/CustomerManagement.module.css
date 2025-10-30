@@ -1,0 +1,189 @@
+.container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #1a223f;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 216, 255, 0.4);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #e1f7ff;
+}
+
+.head {
+  font-size: 2rem;
+  text-align: center;
+  font-weight: 700;
+  color: #00d8ff;
+  margin-bottom: 1.5rem;
+}
+
+.section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 11px;
+  padding: 1rem 1.125rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px #00d8ff33;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  align-items: center;
+}
+
+input,
+select,
+button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f8ff;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input::placeholder,
+select::placeholder {
+  color: rgba(224, 247, 255, 0.6);
+}
+
+input:focus,
+select:focus {
+  background: rgba(0, 216, 255, 0.15);
+  outline: none;
+  box-shadow: 0 0 8px #00d8ff;
+  color: white;
+  caret-color: #00d8ff;
+}
+select {
+  background: rgba(255, 255, 255, 0.1); /* translucent dark background */
+  color: #f0f8ff; /* light text */
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+select option {
+  background: #1a223f; /* dark background for options */
+  color: #e1f7ff; /* light text for options */
+}
+
+/* Focus style with blue glow */
+select:focus {
+  background: rgba(0, 216, 255, 0.15);
+  outline: none;
+  box-shadow: 0 0 8px #00d8ff;
+  color: white;
+  caret-color: #00d8ff;
+}
+
+button {
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 216, 255, 0.7);
+  transition: background 0.4s ease;
+  padding: 12px 1rem;
+  border-radius: 12px;
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+}
+
+.action {
+  background: #268aed;
+  margin-right: 0.25rem;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.delete {
+  background: #f64747;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.cancel {
+  background: #ccc !important;
+  color: #313;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1a223f;
+  color: #e1f7ff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 12px #00d8ff44;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #00d8ff44;
+  text-align: left;
+}
+
+.table th {
+  background: #12203a;
+  color: #00d8ff;
+  font-weight: 600;
+}
+
+.table tr:hover td {
+  background: #0d172d;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(26, 34, 63, 0.7);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalcontent {
+  background: #1a223f;
+  border-radius: 12px;
+  padding: 25px 20px;
+  box-shadow: 0 4px 30px rgba(0, 216, 255, 0.7);
+  min-width: 320px;
+  max-width: 97vw;
+  color: #e1f7ff;
+}
+
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .modalcontent {
+    min-width: 90vw;
+  }
+  .table th,
+  .table td {
+    font-size: 14px;
+    padding: 8px 8px;
+  }
+}

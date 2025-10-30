@@ -1,57 +1,22 @@
 .carousel-container {
-  overflow: hidden;
-  position: relative; 
+  position: relative;
   width: 100%;
-  padding-bottom: 30px;  
+  overflow: visible; /* allow arrows to be visible */
 }
 
-.slick-dots {
-  bottom: 15px;
-  text-align: center;
-  z-index: 3;
-}
-
-.slick-dots li button:before {
-  font-size: 12px;
-  color: #2F4F4F;
-  opacity: 0.75;
-}
-
-.slick-dots li.slick-active button:before {
-  color: #a18cd1;
-  opacity: 1;
-}
-
-.slick-slide {
+.carousel-slide {
   position: relative;
 }
 
-.slick-prev, .slick-next {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  display: block !important;
-  z-index: 3;
-}
-
-.slick-prev {
-  left: 10px;
-}
-
-.slick-next {
-  right: 20px;
-}
-
-.slick-prev:before, .slick-next:before {
-  font-size: 30px;
-  color: #a18cd1;
-}
-
-img {
+.carousel-img {
   width: 100%;
-  height: 400px;
-  display: block;
-  z-index: 1;
+  height: 100vh;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.carousel-slide:hover .carousel-img {
+  transform: scale(1.05);
 }
 
 .overlay {
@@ -60,31 +25,110 @@ img {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  z-index: 2;
+  padding: 20px 40px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 216, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 216, 255, 0.2);
 }
 
-.overlay h2 {
-  font-size: 24px;
-  margin-bottom: 10px;
-  color: #fff;
-  font-weight: 900;
-  cursor: pointer;
-}
-.overlay h2:hover {
-  color:#441f92 ;
-}
-
-.overlay button {
-  padding: 10px 20px;
-  background: linear-gradient(to right, #a18cd1, #fbc2eb);
-  border: none;
+.slide-title {
+  font-size: 32px;
   color: white;
-  cursor: pointer;
-  font-weight: bolder;
-  border-radius: 5px;
-  transition: background 0.3s ease;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  animation: slideUp 0.8s ease forwards;
 }
 
-.overlay button:hover {
-  background: linear-gradient(to right, #fbc2eb, #a18cd1);
+.slide-btn {
+  padding: 10px 24px;
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transform: scale(0.9);
+  animation: fadeInButton 1s ease forwards 0.3s;
+  box-shadow: 0 0 12px rgba(0, 216, 255, 0.4);
+  transition: all 0.3s ease;
 }
+
+.slide-btn:hover {
+  background: linear-gradient(90deg, #00d8ff 0%, #1a8cff 100%);
+  box-shadow: 0 0 20px rgba(0, 216, 255, 0.8);
+  transform: scale(1.08);
+}
+
+/* Arrow buttons fixed */
+.slick-prev, .slick-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 45px;
+  height: 45px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+}
+
+.slick-prev {
+  left: 20px;
+}
+.slick-next {
+  right: 20px;
+}
+
+.slick-prev:before, .slick-next:before {
+  font-size: 25px;
+  color: white;
+}
+
+/* Style for dots container and dots */
+.slick-dots li button::before {
+  font-size: 10px;
+  color: #ccc; /* base dot color */
+  opacity: 1;
+  transition: color 0.3s ease;
+  box-shadow: none !important; /* remove glow */
+  outline: none !important; /* remove outline */
+}
+
+/* Active dot style */
+.slick-dots li.slick-active button::before {
+  color: #00d8ff; /* bright theme color */
+  box-shadow: none !important; /* remove glow */
+  outline: none !important; /* remove outline */
+  
+}
+
+/* Optional: remove focus outline on dots */
+.slick-dots li button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Keyframes */
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0px); }
+}
+
+@keyframes fadeInButton {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Responsive adjustments */
+/* @media (max-width: 768px) {
+  .carousel-img {
+    height: 70vh;
+  }
+  .slide-title {
+    font-size: 22px;
+  }
+} */
+

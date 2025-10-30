@@ -1,6 +1,66 @@
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: sans-serif;
 }
+
+/* Ensure full viewport height for layout flex container */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Main app layout for sticky footer */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Content area will expand to fill space above footer */
+.main-content {
+  flex: 1 0 auto;
+  background: white;
+}
+:root {
+  --primary-dark: #1a223f;
+  --primary-light: #00d8ff;
+  --text-light: #e1f7ff;
+  --error: #ff4e4e;
+  --success: #00ffae;
+  --bg-dark: rgba(0, 31, 63, 0.88);
+  --card-shadow: 0 8px 30px 0 rgba(0,216,255,0.23);
+  
+  --premium-gradient: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  --link-color: #fff;
+  --hover-color: #a3e9ff;
+  --logout-hover: #ff4d4f;
+  --background-blur: rgba(26, 34, 63, 0.95);
+  --header-height: 64px;
+  
+  --danger: #f64747;
+  --danger-hover: #d72525;
+  --success-hover: #1c8654;
+  --bg-light: rgba(255, 255, 255, 0.12);
+  --shadow-glow: 0 4px 20px rgba(0, 216, 255, 0.35);
+
+  --color-dark-base: #1a223f;
+  --color-light-accent: #00d8ff;
+  --color-background: #f7fafd;
+  --color-card-bg: #f0f5fa;
+  --color-mid-dark: #e7eef4;
+  --color-text-primary: #151b2b;
+  --color-text-secondary: #65738c;
+  --color-border: #c7d3e6;
+  --color-warning: #ffd700;
+
+  --footer-bg: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  --footer-glass: rgba(255, 255, 255, 0.08);
+  --footer-link: #ffffff;
+  --footer-link-hover: #a3e9ff;
+  --footer-icon-bg: rgba(255, 255, 255, 0.15);
+  --footer-radius: 20px;
+  --footer-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+

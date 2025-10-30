@@ -1,11 +1,11 @@
+import React from "react";
 import Slider from "react-slick";
+import { Link } from "react-router-dom";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import React from "react";
-
 import "./Carousel.css";
-import { Link } from 'react-router-dom';
-import user from "../assets/User.jpeg"
+
+import user from "../assets/User.jpeg";
 import doctor from "../assets/Doctor.jpeg";
 import hospital from "../assets/Hospital.jpeg";
 import lab from "../assets/Lab.jpeg";
@@ -13,94 +13,60 @@ import medical from "../assets/Medical.jpeg";
 import pharmacy from "../assets/Pharmacy.jpeg";
 import nurse from "../assets/Nurse3.jpeg";
 import radiologist from "../assets/Radiologist4.jpeg";
+import dispensary from "../assets/Nurse3.jpeg";
+
+const slides = [
+  { image: user, title: "Register as Patient", link: "/patient-registration" },
+  { image: doctor, title: "Register as Doctor", link: "/doctor-registration" },
+//  { image: hospital, title: "Register as Hospital", link: "/hospital-registration" },
+//  { image: lab, title: "Register as Lab", link: "/lab-registration" },
+  { image: medical, title: "Register as Medical Store", link: "/medical-store-registration" },
+//  { image: pharmacy, title: "Register as Pharmacy", link: "/pharmacy-registration" },
+//  { image: nurse, title: "Register as Nurse", link: "/nurse-registration" },
+//  { image: dispensary, title: "Register as Dispensary", link: "/dispensary-registration" },
+//  { image: radiologist, title: "Register as Radiologist", link: "/radiologist-registration" },
+];
+
 const Carousel = () => {
   const settings = {
-    dots: true,  // Display dots for navigation
-    infinite: true,  // Enables infinite loop
-    speed: 500,
-    slidesToShow: 1,  // Show one slide at a time
-    slidesToScroll: 1,  // Scroll one slide at a time
-    autoplay: true,  // Enable auto-play
-    autoplaySpeed: 3000,  // Auto-play speed in ms
-    arrows: true  // Show next/prev arrows
+    dots: true,
+    infinite: true,
+    speed: 800,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3500,
+    arrows: true,
+    pauseOnHover: true,
+    fade: true,
+    afterChange: () => {
+      document.querySelectorAll(".slide-btn").forEach((btn) => {
+        btn.style.animation = "none";
+        btn.offsetHeight; // trigger reflow
+        btn.style.animation = "";
+      });
+    },
   };
 
   return (
-    <>
-   <div className="carousel-container">
-  <Slider {...settings}>
-    <div style={{ position: 'relative' }}>
-      <img src={user} alt="user" />
-      <div className="overlay">
-        <h2>Register as User</h2>
-        <Link to="/user registration">
-        <button>Register</button>
-        </Link>
-       
-      </div>
+    <div className="carousel-container">
+      <Slider {...settings}>
+        {slides.map((slide, index) => (
+          <div key={index} className="carousel-slide">
+            <img src={slide.image} alt={slide.title} className="carousel-img" />
+            <div className="overlay">
+              <h2 className="slide-title">{slide.title}</h2>
+              <Link to={slide.link}>
+                <button className="slide-btn">Register</button>
+              </Link>
+            </div>
+          </div>
+        ))}
+      </Slider>
     </div>
-    <div style={{ position: 'relative' }}>
-      <img src={doctor} alt="doctor" />
-      <div className="overlay">
-        <h2>Register as Doctor</h2>
-        <Link to ="/doctor registration">
-        <button>Register</button>
-        </Link>
-       
-      </div>
-    </div>
-    <div style={{ position: 'relative' }}>
-      <img src={hospital} alt="hospital" />
-      <div className="overlay">
-        <h2>Register as Hospital</h2>
-        <Link to =''>
-        <button>Register</button>
-        </Link>
-        
-      </div>
-    </div>
-    <div style={{ position: 'relative' }}>
-      <img src={lab} alt="lab" />
-      <div className="overlay">
-        <h2>Register as Lab</h2>
-        <button>Register</button>
-      </div>
-    </div>
-    <div style={{ position: 'relative' }}>
-      <img src={medical} alt="medical" />
-      <div className="overlay">
-        <h2>Register as Medical</h2>
-        <button>Register</button>
-      </div>
-    </div>
-    <div style={{ position: 'relative' }}>
-      <img src={pharmacy} alt="pharmacy" />
-      <div className="overlay">
-        <h2>Register as Pharmacy</h2>
-        <button>Register</button>
-      </div>
-    </div>
-    <div style={{ position: 'relative' }}>
-      <img src={nurse} alt="nurse" />
-      <div className="overlay">
-        <h2>Register as Nurse</h2>
-        <button>Register</button>
-      </div>
-    </div>
-    <div style={{ position: 'relative' }}>
-      <img src={radiologist} alt="radiologist" />
-      <div className="overlay">
-        <h2>Register as Radiologist</h2>
-        <button>Register</button>
-      </div>
-    </div>
-  </Slider>
-</div>
-
-    
-    </>
-   
   );
 };
 
 export default Carousel;
+
+

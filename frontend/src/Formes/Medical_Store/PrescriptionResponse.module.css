@@ -1,0 +1,341 @@
+
+/* 1. Layout & Container */
+.wrapper {
+  padding: 24px 0;
+  min-height: 100vh;
+  background: var(--color-background);
+  font-family: "Segoe UI", "Inter", Arial, sans-serif;
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.heading {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-dark-base);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  border-bottom: 4px solid var(--color-light-accent);
+  width: 70vw;
+  background: none;
+}
+
+/* 2. Tabs */
+.tabWrapper {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 28px;
+  width: 70vw;
+  border-bottom: 1.5px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 14px 10px 14px;
+  margin-bottom: -2px;
+  transition: color 0.3s, border-bottom 0.3s;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  flex: 1 0 auto;
+  text-align: center;
+  min-width: 120px;
+}
+
+.tab:hover {
+  color: var(--color-light-accent);
+  border-bottom: 2px solid var(--color-light-accent);
+}
+
+.active {
+  color: var(--color-dark-base);
+  border-bottom: 2.5px solid var(--color-light-accent);
+  background: none;
+  font-weight: 700;
+}
+
+/* 3. Cards */
+.card {
+  background: var(--color-card-bg);
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(26,34,63,0.07);
+  border: 1px solid var(--color-border);
+  margin: 12px 0;
+  padding: 22px 30px 16px 30px;
+  width: 65vw;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  word-wrap: break-word;
+}
+
+.cardHeader {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  color: var(--color-dark-base);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.cardBody {
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.cardActions {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+/* 4. Buttons */
+button.viewBtn,
+button.respondBtn,
+button.editBtn,
+button.deleteBtn,
+button.submitBtn,
+button.cancelBtn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  outline: none;
+  cursor: pointer;
+}
+
+button.viewBtn {
+  background: var(--color-light-accent);
+  color: var(--color-card-bg);
+}
+button.viewBtn:hover {
+  background: var(--color-success);
+  color: white;
+}
+
+button.respondBtn {
+  background: var(--color-dark-base);
+  color: white;
+}
+button.respondBtn:hover {
+  background: var(--color-light-accent);
+  color: var(--color-dark-base);
+}
+
+button.editBtn {
+  background: var(--color-mid-dark);
+  color: var(--color-dark-base);
+}
+button.editBtn:hover {
+  background: var(--color-light-accent);
+  color: var(--color-card-bg);
+}
+
+button.deleteBtn {
+  background: var(--color-error);
+  color: white;
+}
+button.deleteBtn:hover {
+  background: #b92e2e;
+}
+
+button.submitBtn {
+  background: var(--color-success);
+  color: white;
+}
+button.submitBtn:hover {
+  background: #049a60;
+}
+
+button.cancelBtn {
+  background: var(--color-mid-dark);
+  color: var(--color-dark-base);
+}
+button.cancelBtn:hover {
+  background: var(--color-light-accent);
+  color: var(--color-card-bg);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* 5. Modal & Forms */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(230,244,255,0.72);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.form {
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  padding: 26px 28px 18px 28px;
+  box-shadow: 0 4px 18px rgba(26,34,63,0.12);
+  width: 350px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: var(--color-dark-base);
+  font-size: 14px;
+  gap: 5px;
+}
+
+.form textarea,
+.form select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 10px;
+  border-radius: 7px;
+  border: 1.2px solid var(--color-border);
+  background: var(--color-mid-dark);
+  color: var(--color-dark-base);
+  resize: vertical;
+  min-height: 40px;
+}
+
+.form textarea {
+  min-height: 70px;
+}
+
+/* Make sure select dropdown is visible initially */
+.form select {
+  appearance: none;
+  cursor: pointer;
+}
+
+/* 6. Status & Error */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  font-size: 18px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  background: #fff6f7;
+  color: var(--color-error);
+  border-radius: 7px;
+  padding: 10px 19px;
+  border: 1.2px solid var(--color-error);
+  font-weight: 500;
+  text-align: center;
+  margin: 20px 0 0 0;
+}
+
+/* Patient and Customer Details section */
+.patientDetails,
+.customerDetails {
+  margin-top: 12px;
+  padding: 10px 15px;
+  background: var(--color-mid-dark);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.patientDetails h4,
+.customerDetails h4 {
+  margin-bottom: 8px;
+  color: var(--color-dark-base);
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .wrapper {
+    padding: 16px 0;
+  }
+
+  .heading {
+    width: 90vw;
+    font-size: 24px;
+  }
+
+  .tabWrapper {
+    width: 90vw;
+    gap: 12px;
+  }
+
+  .card {
+    width: 90vw;
+    padding: 18px 22px 14px 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .heading {
+    font-size: 20px;
+    width: 95vw;
+  }
+
+  .tabWrapper {
+    width: 95vw;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    font-size: 14px;
+    min-width: 100px;
+  }
+
+  .card {
+    width: 95vw;
+    padding: 16px 16px 12px 16px;
+  }
+
+  .form {
+    width: 90vw;
+    padding: 20px 22px 16px 22px;
+  }
+}

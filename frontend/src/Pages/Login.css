@@ -1,103 +1,147 @@
-/* Login.css */
-
+/* Reset */
 body, html {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-   /* Prevents overflow on the entire page */
+  font-family: Arial, sans-serif;
 }
 
-/* Container for the entire login form */
+/* Background container */
 .login-container {
-  background-image: url('C:\Users\saini\Desktop\MedicalApp\frontend\src\assets\Login2.jpeg'); /* Add the background image */
-  background-size: cover; /* Ensure the image covers the entire container */
-  background-position: center; /* Center the background image */
-  height: 100vh; /* Full viewport height */
-  display: flex; /* Flexbox for centering */
-  justify-content: center; /* Center the form horizontally */
-  align-items: center; /* Center the form vertically */
-  padding: 20px; /* Add padding for small screens */
+  position: relative;
+  background-image: url('/hospital-3582607_640.jpg'); /* Public folder image */
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow: hidden;
 }
 
-/* Container for the form itself */
+/* Dark overlay for readability */
+.login-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* semi-transparent overlay */
+  z-index: 1;
+}
+
+/* Login form box */
 .login-form {
-  background: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
-  padding: 40px; /* Space inside the form */
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+  position: relative;
+  z-index: 2;
+  background: rgba(0, 31, 63, 0.85);
+  padding: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 216, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 216, 255, 0.4);
   width: 100%;
-  max-width: 400px; /* Set a maximum width for the form */
+  max-width: 400px;
+  transition: transform 0.2s ease-in-out;
 }
 
-/* Form heading */
+.login-form:hover {
+  transform: scale(1.01);
+}
+
+/* Heading */
 .login-heading {
-  color: #4c4c4c; /* Dark grey color */
-  margin-bottom: 20px; /* Space below the heading */
-  text-align: center; /* Center the heading */
+  color: #00d8ff;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 24px;
 }
 
-/* Container for each input field and label */
+/* Input wrapper */
 .login-input-container {
-  margin-bottom: 20px; /* Space below each input field */
+  margin-bottom: 20px;
 }
 
 .login-input-container label {
-  display: block; /* Ensure label takes full width */
-  margin-bottom: 8px; /* Space below the label */
-  font-weight: bold; /* Make the label text bold */
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #00d8ff;
 }
 
-/* Input fields */
-.login-input-container input[type="text"],
-.login-input-container input[type="email"],
-.login-input-container input[type="password"] {
-  width: 100%; /* Full width */
-  padding: 10px; /* Space inside the input field */
-  border: 1px solid #ccc; /* Light grey border */
-  border-radius: 5px; /* Rounded corners */
-  font-size: 16px; /* Font size for the text */
+/* Inputs */
+.login-input-container input {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 216, 255, 0.3);
+  border-radius: 5px;
+  font-size: 16px;
+  color: white;
+  transition: all 0.3s ease;
 }
 
-.login-input-container input[type="text"]:focus,
-.login-input-container input[type="email"]:focus,
-.login-input-container input[type="password"]:focus {
-  border-color: #a18cd1; /* Change border color on focus */
-  outline: none; /* Remove the outline */
+.login-input-container input:focus {
+  border-color: #00d8ff;
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 8px #00d8ff;
 }
 
-/* Container for the checkbox */
-.login-checkbox-container {
-  display: flex; /* Align items horizontally */
-  align-items: center; /* Center vertically */
-  margin-bottom: 20px; /* Space below the checkbox */
-}
-
-/* Checkbox */
-.login-checkbox-container input[type="checkbox"] {
-  margin-right: 10px; /* Space between checkbox and label */
-}
-
-/* Submit button */
+/* Button */
 .login-button {
-  width: 100%; /* Full width */
-  padding: 12px; /* Space inside the button */
-  background-color: #a18cd1; /* Initial background color */
-  color: white; /* White text */
-  font-size: 16px; /* Font size */
-  border: none; /* Remove border */
-  border-radius: 5px; /* Rounded corners */
-  cursor: pointer; /* Pointer cursor on hover */
-  transition: background-color 0.3s ease; /* Smooth transition for hover */
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #1a223f 0%, #00d8ff 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s ease;
 }
 
 .login-button:hover {
-  background-color: #fbc2eb; /* Change background color on hover */
+  background: linear-gradient(90deg, #00d8ff 0%, #1a223f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(0, 216, 255, 0.7);
 }
 
+/* Success/Error Messages */
+.login-success {
+  color: #00ffae;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.login-error {
+  color: #ff4e4e;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .login-form {
-    width: 90%; /* Responsive width for smaller screens */
-    padding: 20px; /* Adjust padding */
+    width: 90%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form {
+    padding: 15px;
+  }
+  .login-input-container input {
+    font-size: 14px;
+    padding: 8px;
+  }
+  .login-button {
+    font-size: 14px;
+    padding: 10px;
   }
 }

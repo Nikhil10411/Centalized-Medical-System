@@ -1,30 +1,61 @@
-import React, { useState } from 'react';
-import './Login.css'; 
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import Notification from "../Notification/Notification";
+import "./Login.css";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get original destination path or fallback to home
+  const from = location.state?.from || "/";
+
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', formData);
+
+    const encodedData = new URLSearchParams();
+    encodedData.append("grant_type", "password");
+    encodedData.append("username", formData.username);
+    encodedData.append("password", formData.password);
+    encodedData.append("scope", "");
+    encodedData.append("client_id", "");
+    encodedData.append("client_secret", "");
+
+    try {
+      const response = await fetch("http://localhost:8000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: encodedData.toString(),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setNotification({ message: "✅ Login successful!", type: "success" });
+        localStorage.setItem("access_token", data.access_token);
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 1000);
+      } else {
+        setNotification({ message: data.detail || "❌ Login failed", type: "error" });
+      }
+    } catch {
+      setNotification({ message: "🚨 Server error", type: "error" });
+    }
   };
 
   return (
     <div className="login-container">
+      {notification.message && (
+        <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
+      )}
       <form className="login-form" onSubmit={handleSubmit}>
         <h2 className="login-heading">Login</h2>
         <div className="login-input-container">
@@ -35,17 +66,7 @@ const Login = () => {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="login-input-container">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
+            placeholder="Enter your username"
             required
           />
         </div>
@@ -57,20 +78,13 @@ const Login = () => {
             name="password"
             value={formData.password}
             onChange={handleChange}
+            placeholder="Enter your password"
             required
           />
         </div>
-        <div className="login-checkbox-container">
-          <input
-            type="checkbox"
-            id="rememberMe"
-            name="rememberMe"
-            checked={formData.rememberMe}
-            onChange={handleChange}
-          />
-          <label htmlFor="rememberMe">Remember Me</label>
-        </div>
-        <button className="login-button" type="submit">Login</button>
+        <button className="login-button" type="submit">
+          Login
+        </button>
       </form>
     </div>
   );
