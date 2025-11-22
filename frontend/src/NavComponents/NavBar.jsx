@@ -16,7 +16,12 @@ function NavBar({ isLoggedIn = false, onLogout }) {
 
     // ✅ Listen to custom cart updates (from ProductList)
     const handleCartUpdate = (e) => {
-      setCartCount(e.detail || 0);
+      // Assuming e.detail is the new count
+      const newCount = e.detail || 0;
+      setCartCount(newCount);
+      // Optional: Update localStorage here if the event source (e.g., ProductList)
+      // doesn't handle it, to keep the initial load count accurate.
+      // localStorage.setItem("cart_count", newCount.toString());
     };
 
     window.addEventListener("cartUpdated", handleCartUpdate);
@@ -34,6 +39,11 @@ function NavBar({ isLoggedIn = false, onLogout }) {
   const handleLogout = () => {
     onLogout?.();
     localStorage.removeItem("access_token");
+    setMenuOpen(false);
+  };
+
+  const handleCartClick = () => {
+    navigate('/cart');
     setMenuOpen(false);
   };
 
@@ -62,7 +72,7 @@ function NavBar({ isLoggedIn = false, onLogout }) {
         </button>
       </form>
 
-      {/* Nav Links */}
+      {/* Nav Links (Includes Mobile Menu Content) */}
       <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ''}`}>
         <li className={styles.navItem}>
           <NavLink
@@ -110,6 +120,23 @@ function NavBar({ isLoggedIn = false, onLogout }) {
           </NavLink>
         </li>
 
+        {/* --- NEW: Cart Link for Mobile Menu --- */}
+        <li className={`${styles.navItem} ${styles.mobileCartItem}`}>
+          <div
+            className={styles.navLink} // Using div and custom click handler
+            onClick={handleCartClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleCartClick()}
+          >
+            Cart
+            {cartCount > 0 && (
+              <span className={styles.cartCountMobile}>({cartCount})</span>
+            )}
+          </div>
+        </li>
+        {/* --- END NEW --- */}
+
         {/* Login / Logout */}
         <li className={styles.navItem}>
           {isLoggedIn ? (
@@ -133,8 +160,9 @@ function NavBar({ isLoggedIn = false, onLogout }) {
         </li>
       </ul>
 
-      {/* Icons: Cart + User */}
+      {/* Icons: Cart (Desktop/Tablet) + User */}
       <div className={styles.iconsContainer}>
+        {/* Existing Cart Icon (Desktop/Tablet) */}
         <Link to="/cart" className={styles.cartIcon}>
           <FaShoppingCart size={26} />
           {cartCount > 0 && (

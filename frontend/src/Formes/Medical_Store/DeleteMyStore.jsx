@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom"; // 👈 Import navi
 import "./DeleteMyStore.css";
 import Notification from "../../Notification/Notification";
 
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 const DeleteMyStore = () => {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
@@ -58,7 +60,7 @@ const DeleteMyStore = () => {
         return;
       }
       
-      const res = await axios.delete("http://127.0.0.1:8000/medical_store/delete_me", {
+      const res = await axios.delete(`${API_BASE}/delete_me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       

@@ -21,7 +21,7 @@ const slides = [
 //  { image: hospital, title: "Register as Hospital", link: "/hospital-registration" },
 //  { image: lab, title: "Register as Lab", link: "/lab-registration" },
   { image: medical, title: "Register as Medical Store", link: "/medical-store-registration" },
-//  { image: pharmacy, title: "Register as Pharmacy", link: "/pharmacy-registration" },
+  { image: pharmacy, title: "Register as Supplier", link: "/supplier-registration" },
 //  { image: nurse, title: "Register as Nurse", link: "/nurse-registration" },
 //  { image: dispensary, title: "Register as Dispensary", link: "/dispensary-registration" },
 //  { image: radiologist, title: "Register as Radiologist", link: "/radiologist-registration" },

@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom"; // Import necessary
 import "./UpdateMyStore.css";
 import Notification from "../../Notification/Notification";
 
+
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 const UpdateMyStore = () => {
   // --- Form State ---
   const [formData, setFormData] = useState({
@@ -71,7 +74,7 @@ const UpdateMyStore = () => {
             return;
         }
 
-        const res = await axios.get("http://127.0.0.1:8000/medical_store/update", {
+        const res = await axios.get(`${API_BASE}/update`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -216,7 +219,7 @@ const UpdateMyStore = () => {
         return;
       }
       
-      const res = await axios.put("http://127.0.0.1:8000/medical_store/update", data, {
+      const res = await axios.put(`${API_BASE}/update`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

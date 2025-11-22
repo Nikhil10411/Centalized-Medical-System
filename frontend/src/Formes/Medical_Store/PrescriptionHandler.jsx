@@ -13,7 +13,7 @@ import {
 import Notification from "../../Notification/Notification";
 import "./PrescriptionHandler.css";
 
-const API_BASE_URL = "http://localhost:8000/medical_store";
+const API_BASE = "http://localhost:8000/api/medical_store";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("access_token");
@@ -67,7 +67,7 @@ const PrescriptionHandler = () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${API_BASE_URL}/all_chemist/my_responses`,
+          `${API_BASE}/all_chemist/my_responses`,
           getAuthHeaders()
         );
         setResponses(res.data || []);
@@ -95,7 +95,7 @@ const PrescriptionHandler = () => {
 
     setCreating(true);
     try {
-      await axios.post(`${API_BASE_URL}/prescription`, formData, {
+      await axios.post(`${API_BASE}/prescription`, formData, {
         ...getAuthHeaders(),
         headers: {
           ...getAuthHeaders().headers,
@@ -118,7 +118,7 @@ const PrescriptionHandler = () => {
   // --- View prescription file ---
   const handleViewPrescription = (prescription_id) => {
     const token = localStorage.getItem("access_token");
-    const url = `${API_BASE_URL}/prescription/${prescription_id}/document?token=${token}`;
+    const url = `${API_BASE}/prescription/${prescription_id}/document?token=${token}`;
     window.open(url, "_blank");
   };
 
@@ -126,7 +126,7 @@ const PrescriptionHandler = () => {
   const handleAssignStore = async (prescriptionId, storeId) => {
     try {
       await axios.post(
-        `${API_BASE_URL}/assign-store?prescription_id=${prescriptionId}&store_id=${storeId}`,
+        `${API_BASE}/assign-store?prescription_id=${prescriptionId}&store_id=${storeId}`,
         null,
         getAuthHeaders()
       );
@@ -149,7 +149,7 @@ const PrescriptionHandler = () => {
     if (!window.confirm("Delete this prescription permanently?")) return;
     try {
       await axios.delete(
-        `${API_BASE_URL}/prescription_delete/${prescription_id}`,
+        `${API_BASE}/prescription_delete/${prescription_id}`,
         getAuthHeaders()
       );
       showNotification("🗑️ Prescription deleted!", "success");

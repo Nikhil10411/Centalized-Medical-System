@@ -1,4 +1,19 @@
 import React, { useEffect, useState } from "react";
+// Import all necessary Firebase modules, even if only Firestore is used, 
+// to ensure the app is set up for persistence.
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+// Placeholder for API base URL (as defined in the original code)
+const API_BASE = "http://localhost:8000/api";
+
+// --- Global Setup (Required Firebase Boilerplate) ---
+// Initialize Firebase config and ID from global variables
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const firebaseConfig = typeof __firebase_config !== 'undefined' 
+    ? JSON.parse(__firebase_config) 
+    : {};
 
 // The ProductCard component is responsible for displaying a single product 
 // and differentiating between store inventory and supplier products.
@@ -34,10 +49,62 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
   // --- State Management ---
   const [imageSrc, setImageSrc] = useState(PLACEHOLDER_URL);
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const [userId, setUserId] = useState(null); // Firebase User ID
+  const [isAuthReady, setIsAuthReady] = useState(false); // Auth status
 
   // --- Differentiation Logic ---
   const isSupplierProduct = product.type === "supplier_product";
   const productSourceLabel = isSupplierProduct ? "Supplier Item" : "Store Inventory";
+
+  // --- Firebase Initialization and Auth Effect ---
+  useEffect(() => {
+    if (Object.keys(firebaseConfig).length === 0) {
+      console.warn("Firebase config is empty. Skipping initialization.");
+      setIsAuthReady(true); // Proceed without auth if config is missing
+      return;
+    }
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      // const db = getFirestore(app); // Firestore instance is not directly used here
+
+      // 1. Listen for auth state changes
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setUserId(user.uid);
+        } else {
+          // Fallback to anonymous sign-in if no user is found
+          // This ensures we always have a user context (even an anonymous one)
+          signInAnonymously(auth).catch(e => console.error("Anonymous sign-in failed:", e));
+        }
+        setIsAuthReady(true);
+      });
+
+      // 2. Initial token sign-in (if token is provided)
+      const initialAuth = async () => {
+        const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        if (token) {
+          try {
+            await signInWithCustomToken(auth, token);
+          } catch (error) {
+            console.error("Custom token sign-in failed, attempting anonymous sign-in:", error);
+            await signInAnonymously(auth);
+          }
+        } else {
+          await signInAnonymously(auth);
+        }
+      };
+      
+      initialAuth();
+
+      return () => unsubscribe(); // Cleanup auth listener
+    } catch (e) {
+      console.error("Firebase initialization failed:", e);
+      setIsAuthReady(true); // Fail-safe to unblock UI
+    }
+  }, []);
+
 
   // --- Image Fetching Effect ---
   useEffect(() => {
@@ -46,20 +113,26 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
     let currentImageSrc = null;
 
     const fetchImage = async () => {
+      // If image URL is explicitly null or empty, use placeholder
       if (!product.product_image_url) {
         setImageSrc(PLACEHOLDER_URL);
         return;
       }
       
       // Construct the image URL based on the product ID and assumed local API endpoint
-      const imageUrl = `http://127.0.0.1:8000/api/image/${product.product_id}`;
+      // This logic assumes the backend serves the image blob at this endpoint
+      const imageUrl = `${API_BASE}/image/${product.product_id}`;
       
       try {
         // Use the provided authToken for secure image access
         const res = await fetch(imageUrl, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-        if (!res.ok) throw new Error("Image not found");
+
+        // Handle non-200 responses gracefully
+        if (!res.ok) {
+          throw new Error(`Image fetch failed with status: ${res.status}`);
+        }
         
         // Convert response to blob and create a local URL
         const blob = await res.blob();
@@ -67,9 +140,10 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
         setImageSrc(currentImageSrc);
       } catch (err) {
         console.error("🖼️ Image fetch failed:", err);
-        setImageSrc(PLACEHOLDER_URL);
+        setImageSrc(PLACEHOLDER_URL); // Fallback on error
       }
     };
+
     fetchImage();
     
     // Cleanup function: revoke the object URL to prevent memory leaks
@@ -80,13 +154,22 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
     };
   }, [product.product_id, product.product_image_url, authToken]);
 
-  // --- Event Handlers ---
+  // --- Event Handlers (Updated for clarity) ---
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    
+    // Crucial check: Ensure the prop is a function before calling it.
     if (typeof onAddToCart === "function") {
+      // Pass the entire product object, regardless of type (inventory or supplier).
+      // The parent component/function (onAddToCart) must contain the logic 
+      // to handle the differentiation (type === 'supplier_product') and
+      // route the request to the correct order/cart API endpoint.
       onAddToCart(product);
+      // Optional: Provide UI feedback here if necessary, but the parent 
+      // component usually handles confirmation/error states.
     } else {
-      console.warn("onAddToCart is missing or invalid");
+      console.warn("onAddToCart function is missing or invalid on the parent component.");
+      // In a real app, you might show a temporary error message to the user here.
     }
   };
 
@@ -109,6 +192,9 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
       --card-min-height: 400px;
     }
     
+    /* Global Inter Font */
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+
     /* --- PRODUCT CARD BASE STYLES --- */
     .product-card-container { position: relative; margin: 10px; width: 300px; }
     .product-card {
@@ -138,26 +224,35 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
       transform: translateY(-5px) scale(1.02);
       box-shadow: 0 0 25px var(--neon-blue), 0 0 50px rgba(0, 212, 255, 0.3);
     }
-    .image-wrapper { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; background-color: #0f172a; }
+    .image-wrapper { 
+      width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; background-color: #0f172a; 
+      border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for definition */
+    }
     .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
     .product-card:hover .product-img { transform: scale(1.05); }
-    .product-main-details { padding-bottom: 10px; border-bottom: 1px dashed rgba(0,212,255,0.2); display: flex; flex-direction: column; }
+    .product-main-details { 
+      padding-bottom: 10px; 
+      border-bottom: 1px dashed rgba(0,212,255,0.2); 
+      display: flex; flex-direction: column; 
+    }
     .product-card.supplier .product-main-details { border-bottom: 1px dashed rgba(255, 51, 102, 0.5); }
 
 
     .product-name-row { 
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; 
+      display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; 
       position: relative; 
     }
     .product-name { 
-      font-size: 1.5rem; font-weight: 700; color: var(--neon-blue); text-shadow: 0 0 5px var(--shadow-color); margin: 0; max-width: 65%; 
+      font-size: 1.5rem; font-weight: 700; color: var(--neon-blue); text-shadow: 0 0 5px var(--shadow-color); margin: 0; 
+      flex-grow: 1; /* Allows name to take up available space */
+      padding-right: 10px; /* Space before button */
     }
     .product-card.supplier .product-name { color: var(--supplier-red); text-shadow: 0 0 5px rgba(255, 51, 102, 0.5); }
 
     /* --- PRODUCT SOURCE TAG (RIBBON) --- */
     .product-source-tag {
       position: absolute;
-      top: 5px; /* Adjusted position to be slightly more visible */
+      top: 5px;
       left: 0;
       padding: 3px 10px;
       padding-left: 20px;
@@ -167,32 +262,60 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
       background-color: var(--neon-blue);
       border-radius: 0 8px 8px 0;
       z-index: 10;
-      transform: translateX(-10px); /* slightly pull it back */
+      transform: translateX(-10px);
     }
     .product-source-tag.supplier {
       background-color: var(--supplier-red);
       color: white;
     }
     
-    .details-btn { background: transparent; color: var(--yellow-accent); border: 1px solid var(--yellow-accent); padding: 5px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .details-btn { 
+      background: transparent; color: var(--yellow-accent); border: 1px solid var(--yellow-accent); padding: 5px 8px; border-radius: 6px; 
+      font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
+    }
     .details-btn:hover { background-color: rgba(255,204,0,0.1); box-shadow: 0 0 5px var(--yellow-accent); }
     .details-btn.active { background-color: var(--yellow-accent); color: var(--card-bg); }
     .detail-text { font-size: 0.85rem; margin: 2px 0; color: var(--text-secondary); }
     .detail-text strong { color: var(--text-light); }
-    .product-specs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; margin-top: auto; }
-    .spec-tag { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background-color: rgba(0,212,255,0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); }
-    .product-card.supplier .spec-tag { background-color: rgba(255, 51, 102, 0.1); color: var(--supplier-red); border-color: var(--supplier-red); }
+    .product-specs { 
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; margin-bottom: auto; 
+    }
+    .spec-tag { 
+      padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; 
+      background-color: rgba(0,212,255,0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); 
+    }
+    .product-card.supplier .spec-tag { 
+      background-color: rgba(255, 51, 102, 0.1); color: var(--supplier-red); border-color: var(--supplier-red); 
+    }
     .expiry { color: #ff9900; border-color: #ff9900; }
     
     .card-footer-actions { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
-    .product-price { font-size: 1.5rem; font-weight: 800; color: var(--yellow-accent); text-shadow: 0 0 8px rgba(255,204,0,0.5); }
+    .product-price { 
+      font-size: 1.5rem; font-weight: 800; color: var(--yellow-accent); 
+      text-shadow: 0 0 8px rgba(255,204,0,0.5); 
+    }
     
-    .add-cart-btn { background: linear-gradient(45deg,var(--neon-blue),#0077ff); color: var(--card-bg); padding: 10px 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,119,255,0.5); transition: all 0.3s ease; display: flex; align-items: center; gap: 5px; z-index: 20; }
-    .add-cart-btn:hover { background: linear-gradient(45deg,#00e9ff,#0088ff); box-shadow: 0 6px 20px rgba(0,119,255,0.7); transform: translateY(-2px); }
+    .add-cart-btn { 
+      background: linear-gradient(45deg,var(--neon-blue),#0077ff); color: var(--card-bg); 
+      padding: 10px 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; 
+      box-shadow: 0 4px 15px rgba(0,119,255,0.5); transition: all 0.3s ease; 
+      display: flex; align-items: center; gap: 5px; z-index: 20; 
+    }
+    .add-cart-btn:hover { 
+      background: linear-gradient(45deg,#00e9ff,#0088ff); 
+      box-shadow: 0 6px 20px rgba(0,119,255,0.7); 
+      transform: translateY(-2px); 
+    }
     
     /* Supplier Add to Cart Button */
-    .product-card.supplier .add-cart-btn { background: linear-gradient(45deg, var(--supplier-red), #cc2255); box-shadow: 0 4px 15px rgba(255, 51, 102, 0.5); }
-    .product-card.supplier .add-cart-btn:hover { background: linear-gradient(45deg, #ff4477, #dd3366); box-shadow: 0 6px 20px rgba(255, 51, 102, 0.7); }
+    .product-card.supplier .add-cart-btn { 
+      background: linear-gradient(45deg, var(--supplier-red), #cc2255); 
+      box-shadow: 0 4px 15px rgba(255, 51, 102, 0.5); 
+    }
+    .product-card.supplier .add-cart-btn:hover { 
+      background: linear-gradient(45deg, #ff4477, #dd3366); 
+      box-shadow: 0 6px 20px rgba(255, 51, 102, 0.7); 
+    }
     .add-cart-btn svg { stroke: var(--card-bg); }
 
     /* --- DETAILS OVERLAY STYLES --- */
@@ -203,16 +326,23 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
       display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
       transition: opacity 0.3s ease; animation: fadeIn 0.3s ease-out; 
       /* Important: Prevent scrolling issues on the overlay */
-      overflow-y: hidden; 
+      overflow-y: auto; /* Allow internal scrolling if content overflows */
     }
-    .product-card.supplier .store-tooltip { border-color: var(--supplier-red); box-shadow: 0 0 30px rgba(255, 51, 102, 0.7); }
+    .product-card.supplier .store-tooltip { 
+      border-color: var(--supplier-red); 
+      box-shadow: 0 0 30px rgba(255, 51, 102, 0.7); 
+    }
     
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     
     .tooltip-close {
-      position: absolute; top: 10px; right: 15px; background: none; border: none; color: var(--neon-blue);
+      position: sticky; /* Use sticky or fixed for high visibility */
+      top: 0; right: 0; 
+      background: none; border: none; color: var(--neon-blue);
       font-size: 2rem; font-weight: 300; cursor: pointer; transition: color 0.2s; line-height: 1; padding: 0;
       text-shadow: 0 0 10px var(--shadow-color); z-index: 40;
+      align-self: flex-end; /* Push button to the right */
+      margin-right: -5px; /* Adjust for padding offset */
     }
     .product-card.supplier .tooltip-close { color: var(--supplier-red); text-shadow: 0 0 10px rgba(255, 51, 102, 0.7); }
     .tooltip-close:hover { color: #ff5555; text-shadow: 0 0 10px #ff5555; }
@@ -246,7 +376,14 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
 
   return (
     <>
+      {/* Inject the styles into the component */}
       <style>{cardStyles}</style>
+      
+      {/* Display user ID for debugging and multi-user context */}
+      {/* <div style={{ color: 'white', fontSize: '10px', position: 'absolute', top: 0, left: 0, zIndex: 100 }}>
+        User: {userId || 'Authenticating...'}
+      </div> */}
+
       <div className="product-card-container">
         <div className={`product-card ${isSupplierProduct ? "supplier" : "inventory"}`}>
           
@@ -257,7 +394,7 @@ const ProductCard = ({ product, onAddToCart, authToken }) => {
 
           {detailsVisible && (
             // --- Store/Supplier Details Overlay ---
-            <div className="store-tooltip" onClick={toggleDetails}>
+            <div className="store-tooltip" onClick={(e) => e.stopPropagation()}> 
               <button className="tooltip-close" onClick={toggleDetails}>
                 &times;
               </button>

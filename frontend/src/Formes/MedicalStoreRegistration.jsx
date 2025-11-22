@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./MedicalStoreRegistration.css";
 import axios from "axios";
-import Notification from "../Notification/Notification"; // Adjust path as needed
+import Notification from "../Notification/Notification"; 
 import { useNavigate, useLocation } from "react-router-dom";
-import storeBackground from "../assets/Medical.jpeg"; // Path to your background image
+import storeBackground from "../assets/Medical.jpeg"; 
+
+const API_BASE = "http://localhost:8000/api/medical_store";
 
 const MedicalStoreRegistration = () => {
   // Form state
@@ -31,16 +33,41 @@ const MedicalStoreRegistration = () => {
   const [messageType, setMessageType] = useState("info");
   const [errors, setErrors] = useState({});
   const [redirectPending, setRedirectPending] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state to prevent double submission
 
   const navigate = useNavigate();
   const location = useLocation();
+  const token = localStorage.getItem("access_token");
+
+  // Helper to reset the entire form state
+  const resetFormState = () => {
+    setFormData({
+      store_name: "",
+      owner_name: "",
+      age: "",
+      gender: "",
+      store_type: "",
+      address: "",
+      city: "",
+      locality: "",
+      pin_code: "",
+      phone: "",
+      open_hours: "",
+      delivery_radius_km: "",
+    });
+    setLicenseDoc(null);
+    setStorePhoto(null);
+    setErrors({});
+  };
 
   // Validation
   const validate = () => {
     const newErrors = {};
     if (!formData.store_name.trim()) newErrors.store_name = "Store Name is required.";
     if (!formData.owner_name.trim()) newErrors.owner_name = "Owner Name is required.";
-    if (!formData.phone.trim() || formData.phone.trim().length < 5) newErrors.phone = "Valid phone number is required.";
+    if (!formData.phone.trim() || formData.phone.trim().length < 5) newErrors.phone = "Valid phone number is required (min 5 characters).";
+    if (!licenseDoc) newErrors.licenseDoc = "License Document is required for registration.";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -52,8 +79,9 @@ const MedicalStoreRegistration = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleFileChange = (e, setter) => {
+  const handleFileChange = (e, setter, name) => {
     setter(e.target.files[0]);
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleCloseNotification = () => {
@@ -72,23 +100,30 @@ const MedicalStoreRegistration = () => {
     return () => clearTimeout(timer);
   }, [redirectPending, navigate, location.pathname]);
 
-  // Submit logic
+  // ──────────────────────────────────────────────────────────────
+  // Submit logic (Updated)
+  // ──────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setMessage("");
     setMessageType("");
     setRedirectPending(false);
     if (!validate()) return;
+
+    setIsSubmitting(true);
+    
+    const form = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) form.append(key, value);
+    });
+    if (licenseDoc) form.append("license_document", licenseDoc);
+    if (storePhoto) form.append("store_photo", storePhoto);
+
     try {
-      const form = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) form.append(key, value);
-      });
-      if (licenseDoc) form.append("license_document", licenseDoc);
-      if (storePhoto) form.append("store_photo", storePhoto);
-      const token = localStorage.getItem("access_token");
       const response = await axios.post(
-        "http://127.0.0.1:8000/medical_store/register",
+        `${API_BASE}/register`,
         form,
         {
           headers: {
@@ -97,49 +132,55 @@ const MedicalStoreRegistration = () => {
           },
         }
       );
+      
+      // 1. Success state cleanup and notification
       setMessage(response.data.message || "✅ Store registered successfully! Awaiting admin approval.");
       setMessageType("success");
-      setFormData({
-        store_name: "",
-        owner_name: "",
-        age: "",
-        gender: "",
-        store_type: "",
-        address: "",
-        city: "",
-        locality: "",
-        pin_code: "",
-        phone: "",
-        open_hours: "",
-        delivery_radius_km: "",
-      });
-      setLicenseDoc(null);
-      setStorePhoto(null);
-      setErrors({});
+      resetFormState(); // ✅ SUCCESS: Clean up form state
+      
     } catch (error) {
-      let errMsg = "❌ Something went wrong while submitting the form.";
+      let errMsg = "❌ A connection error occurred.";
       let type = "error";
+
       if (error.response) {
         const status = error.response.status;
         const detail = error.response.data.detail;
+        
         if (status === 400) {
           errMsg = detail || "⚠️ You are already registered or details are invalid.";
           type = "warning";
+          
+          // 🎯 CRITICAL FIX: If the error is 'Already Registered', 
+          // we assume the first attempt succeeded and clean up the form state 
+          // to prevent the user from seeing the filled form and thinking it failed.
+          if (typeof detail === 'string' && detail.toLowerCase().includes("already registered")) {
+             setMessage("✅ Registration confirmed. Your store is already registered.");
+             setMessageType("success");
+             resetFormState(); // ✅ FIX: Clean up on confirmed registration
+             setIsSubmitting(false); // Ensure button state is reset
+             return; 
+          }
+          
         } else if (status === 401) {
-          errMsg = "⚠️ You are not logged in. Redirecting to login page...";
+          errMsg = "⚠️ Session expired or not logged in. Redirecting to login page...";
           type = "warning";
           setMessage(errMsg);
           setMessageType(type);
           setRedirectPending(true);
+          setIsSubmitting(false);
           return;
         } else if (typeof detail === "string") {
           errMsg = `❌ ${detail}`;
         } else if (Array.isArray(detail) && detail.length > 0) {
-          errMsg = `❌ Validation Error: ${detail[0].msg} for field '${detail[0].loc[1]}'.`;
+          errMsg = `❌ Validation Error: ${detail[0].msg} for field '${detail[0].loc.pop()}'.`;
         }
       }
+      
       setMessage(errMsg);
       setMessageType(type);
+      
+    } finally {
+      setIsSubmitting(false); // Ensure submission state is always reset
     }
   };
 
@@ -166,7 +207,6 @@ const MedicalStoreRegistration = () => {
       <form className="store-form" onSubmit={handleSubmit}>
         <h2>Medical Store Registration</h2>
 
-        {/* Form fields with error display */}
         {/* Store Name */}
         <div className="form-group">
           <label>Store Name *</label>
@@ -239,6 +279,7 @@ const MedicalStoreRegistration = () => {
           </div>
         </div>
 
+        {/* Phone */}
         <div className="form-group">
           <label>Phone *</label>
           <input
@@ -260,21 +301,24 @@ const MedicalStoreRegistration = () => {
           <label>Delivery Radius (km)</label>
           <input type="number" name="delivery_radius_km" value={formData.delivery_radius_km} onChange={handleChange} />
         </div>
-
+        
+        {/* License Document */}
         <div className="form-group">
-          <label>License Document</label>
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileChange(e, setLicenseDoc)} />
+          <label>License Document *</label>
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileChange(e, setLicenseDoc, 'licenseDoc')} />
           {licenseDoc && <small className="file-info">{licenseDoc.name}</small>}
+          {errors.licenseDoc && <small className="error-text">{errors.licenseDoc}</small>}
         </div>
 
+        {/* Store Photo */}
         <div className="form-group">
           <label>Store Photo</label>
-          <input type="file" accept=".jpg,.jpeg,.png" onChange={(e) => handleFileChange(e, setStorePhoto)} />
+          <input type="file" accept=".jpg,.jpeg,.png" onChange={(e) => handleFileChange(e, setStorePhoto, 'storePhoto')} />
           {storePhoto && <small className="file-info">{storePhoto.name}</small>}
         </div>
 
-        <button type="submit" className="btn-submit" disabled={redirectPending}>
-          {redirectPending ? "Redirecting..." : "Register Store"}
+        <button type="submit" className="btn-submit" disabled={redirectPending || isSubmitting}>
+          {redirectPending ? "Redirecting..." : isSubmitting ? "Submitting..." : "Register Store"}
         </button>
       </form>
     </div>

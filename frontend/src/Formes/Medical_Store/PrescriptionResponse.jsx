@@ -20,11 +20,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./PrescriptionResponse.module.css";
 import Notification from "../../Notification/Notification";
 
-const API_BASE_URL = "http://localhost:8000/medical_store";
+const API_BASE = "http://localhost:8000/api/medical_store";
 
 // Create a reusable axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -55,7 +55,7 @@ const getAuthHeaders = () => {
 
 const getDocumentUrl = (prescriptionId) => {
   const token = localStorage.getItem("access_token");
-  return `${API_BASE_URL}/prescription/${prescriptionId}/document?token=${encodeURIComponent(token)}`;
+  return `${API_BASE}/prescription/${prescriptionId}/document?token=${encodeURIComponent(token)}`;
 };
 
 const statusOptions = [

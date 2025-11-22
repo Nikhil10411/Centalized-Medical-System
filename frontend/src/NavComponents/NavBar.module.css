@@ -1,4 +1,3 @@
-
 .navbar {
   display: flex;
   align-items: center;
@@ -11,7 +10,7 @@
   z-index: 999;
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 14px rgba(24, 24, 95, 0.18);
-  flex-wrap: wrap; /* Allows wrapping on smaller screens if needed */
+  flex-wrap: wrap;
 }
 
 /* --- LOGO --- */
@@ -38,6 +37,10 @@
   margin: 0;
   padding: 0;
   z-index: 1001;
+}
+/* HIDE MOBILE CART ITEM ON DESKTOP */
+.mobileCartItem {
+    display: none;
 }
 
 .navLink {
@@ -186,6 +189,7 @@
 /* --- MEDIUM DEVICES (iPad, small laptops) - max 900px --- */
 /* --------------------------------------------------- */
 @media (max-width: 900px) {
+  
   /* Hide desktop-specific elements */
   .search.desktopSearch,
   .iconsContainer {
@@ -225,7 +229,7 @@
     text-align: center;
   }
   .navLink {
-    display: flex; /* Change to flex for mobile link centering/spacing */
+    display: flex; 
     justify-content: center;
     align-items: center;
     padding: 1rem 0;
@@ -233,6 +237,25 @@
     width: 100%;
   }
 
+  /* --- MOBILE CART LINK STYLING --- */
+  .mobileCartItem {
+    display: list-item; /* Show the cart item in the mobile menu */
+  }
+
+  /* Styling for the cart count next to the word "Cart" */
+  .cartCountMobile {
+    margin-left: 8px; /* Spacing between "Cart" and the count */
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: var(--hover-color); /* Highlight the count */
+  }
+  
+  /* Hiding the desktop circular badge when shown on mobile */
+  .mobileCartItem .cartCount {
+    display: none; 
+  }
+  /* -------------------------------- */
+  
   /* Mobile Search Bar inside the open menu */
   .search.mobileSearch {
     display: flex;
@@ -242,37 +265,6 @@
   .mobileSearchItem {
     display: flex;
     justify-content: center;
-  }
-
-  /* --- MOBILE CART LINK (Styled like a nav link) --- */
-  .mobileCart {
-    margin: 0.5rem 0;
-    display: flex;
-    justify-content: center;
-  }
-  /* The Link component now uses .navLink, so we just add spacing */
-  .mobileCart .navLink {
-    gap: 8px; /* Spacing between icon, text, and count */
-    padding: 1rem 0; /* Keep the padding */
-  }
-
-  /* Show the cart icon and text inside the mobile menu */
-  .mobileCartIcon {
-      color: var(--link-color); /* Icon color */
-  }
-  .mobileCartText {
-    display: inline; 
-  }
-  .mobileCartCount {
-    display: inline;
-    font-size: 1.12rem;
-    font-weight: bold;
-    color: var(--hover-color); /* Highlight the count */
-  }
-
-  /* Hide the desktop cart bubble styling */
-  .mobileCart .cartCount {
-    display: none; 
   }
 }
 

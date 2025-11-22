@@ -21,8 +21,7 @@ export default function SupplierList({
         <thead>
           <tr>
             {[
-              "Name",
-              "Contact",
+              "Contact Name",
               "Phone",
               "Email",
               "City",
@@ -38,7 +37,6 @@ export default function SupplierList({
         <tbody>
           {suppliers.map((s) => (
             <tr key={s.supplier_id}>
-              <td>{s.supplier_name}</td>
               <td>{s.contact_name || "-"}</td>
               <td>{s.phone}</td>
               <td>{s.email || "-"}</td>

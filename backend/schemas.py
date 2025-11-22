@@ -92,11 +92,14 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: UUID
+    id: uuid.UUID
     username: str
     email: EmailStr
     role: Role
     created_at: datetime
+    is_doctor_registered: bool = False
+    is_patient_registered: bool = False
+    is_medical_store_registered: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -198,7 +201,7 @@ class DoctorUpdate(DoctorBase):
 class DoctorOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    doctor_id: str
+    doctor_id: uuid.UUID
     
     # Core Fields
     name: str
@@ -268,8 +271,8 @@ class PhoneRequest(BaseModel):
 
 
 class DoctorPublicResponse(BaseModel):
-    doctor_id: UUID
-    hospital_id: UUID
+    doctor_id: uuid.UUID
+    hospital_id: uuid.UUID
     name: str
     age: int
     gender: str
@@ -316,13 +319,13 @@ class PatientUpdate(PatientBase):
 
 
 class PatientResponse(PatientBase):
-    patient_id: UUID
+    patient_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 class PatientOut(BaseModel):
-    patient_id: str
+    patient_id: uuid.UUID
     name: str
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
@@ -389,8 +392,8 @@ class MedicalHistoryCreate(MedicalHistoryBase):
 
 
 class MedicalHistoryOut(MedicalHistoryBase):
-    history_id: str
-    doctor_id: str
+    history_id: uuid.UUID
+    doctor_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
     patient: Optional[PatientSlim] = None  # ✅ nested patient info
@@ -433,7 +436,7 @@ class HospitalUpdate(BaseModel):
 
 
 class HospitalOut(HospitalBase, ConfigOrm):
-    hospital_id: UUID
+    hospital_id: uuid.UUID
 
 
 # ───────────────────────────────────────
@@ -794,7 +797,8 @@ class MedicalStoreCreate(MedicalStoreBase):
     license_mime: Optional[str] = None
     store_photo: bytes
     photo_mime: Optional[str] = None
-
+    store_id: uuid.UUID
+    owner_id: uuid.UUID
     
 
 # -------------------------
@@ -846,8 +850,8 @@ class MedicalStoreUpdate(BaseModel):
 # Response schema (output)
 # -------------------------
 class MedicalStoreResponse(MedicalStoreBase):
-    store_id: UUID
-    owner_id: UUID
+    store_id: uuid.UUID
+    owner_id: uuid.UUID
     created_at: datetime
     store_photo: Optional[str] = None   # Base64 encoded or URL
     photo_mime: Optional[str] = None
@@ -863,7 +867,6 @@ class MedicalStoreCreateSuccess(BaseModel):
 # Base schema
 # -------------------------
 class SupplierBase(BaseModel):
-    supplier_name: str
     contact_name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -878,7 +881,7 @@ class SupplierBase(BaseModel):
 # -------------------------
 class SupplierCreate(SupplierBase):
     # Add created_by to set who created the supplier (user ID string)
-    created_by: Optional[str] = None
+    created_by: Optional[uuid.UUID] = None
 
 # -------------------------
 # Update schema
@@ -892,9 +895,9 @@ class SupplierUpdate(SupplierBase):
 # Response schema
 # -------------------------
 class SupplierResponse(SupplierBase):
-    supplier_id: str
+    supplier_id: uuid.UUID
     created_at: datetime
-    created_by: Optional[str] = None  # Include in response for info if needed
+    created_by: Optional[uuid.UUID] = None  # Include in response for info if needed
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -930,7 +933,7 @@ class ProductUpdate(ProductBase):
 
 
 class ProductResponse(ProductBase):
-    product_id: str
+    product_id: uuid.UUID
     image_mime: Optional[str] = None  # ✅ return type of uploaded image
     created_at: datetime
 
@@ -957,14 +960,15 @@ class InventoryBase(BaseModel):
     expiry_date: datetime
     quantity: int
     price: condecimal(max_digits=18, decimal_places=2) 
+    product: ProductNested 
 
 class InventoryCreate(InventoryBase):
     pass
 
 class InventoryResponse(InventoryBase):
-    inventory_id: UUID
-    store_id: UUID
-    product_id: UUID
+    inventory_id: uuid.UUID
+    store_id: uuid.UUID
+    product_id: uuid.UUID
     created_at: datetime
     last_updated: datetime
     product: ProductNested  # Nested Product schema
@@ -1000,8 +1004,8 @@ class CustomerUpdate(CustomerBase):
 
 
 class CustomerResponse(CustomerBase):
-    customer_id: str
-    store_id: str
+    customer_id: uuid.UUID
+    store_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
 
@@ -1036,10 +1040,10 @@ class PrescriptionCreate(BaseModel):
     notes: Optional[str] = None
 
 class PrescriptionResp(BaseModel):
-    prescription_id: str
-    customer_id: Optional[str] = None
-    patient_id: Optional[str] = None
-    store_id: Optional[str] = None
+    prescription_id: uuid.UUID
+    customer_id: Optional[uuid.UUID] = None
+    patient_id: Optional[uuid.UUID] = None
+    store_id: Optional[uuid.UUID] = None
     doctor_name: Optional[str]
     notes: Optional[str]
     file_mime: Optional[str]
@@ -1072,7 +1076,7 @@ class MedicalStoreResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class PrescriptionResponseBase(BaseModel):
-    prescription_id: str
+    prescription_id: uuid.UUID
     status: Optional[str] = Field(None, description="CONFIRMED / PARTIAL / NOT AVAILABLE")
     available_items_json: Optional[str] = None
     message: Optional[str] = None
@@ -1086,9 +1090,9 @@ class PrescriptionResponseUpdate(BaseModel):
     message: Optional[str] = None
 
 class PrescriptionResponseRead(BaseModel):
-    response_id: str
-    prescription_id: str
-    store_id: Optional[str]
+    response_id: uuid.UUID
+    prescription_id: uuid.UUID
+    store_id: Optional[uuid.UUID]
     status: Optional[str]
     available_items_json: Optional[str]
     message: Optional[str]
@@ -1107,7 +1111,7 @@ class PrescriptionResponseRead(BaseModel):
 ## Bill Item Schemas
 # --------------------
 class BillItemBase(BaseModel):
-    product_id: str = Field(..., description="Product ID for this bill item")
+    product_id: uuid.UUID = Field(..., description="Product ID for this bill item")
     batch_no: str = Field(..., description="Batch number (alphanumeric)")
     expiry_date: date = Field(..., description="Expiry date of the product batch (YYYY-MM-DD)")
     quantity: int = Field(..., gt=0, description="Number of units sold")
@@ -1120,8 +1124,8 @@ class BillItemCreate(BillItemBase):
 
 
 class BillItemResp(BillItemBase):
-    bill_item_id: str
-    bill_id: str
+    bill_item_id: uuid.UUID
+    bill_id: uuid.UUID
 
     class Config:
         from_attributes = True
@@ -1130,14 +1134,14 @@ class BillItemResp(BillItemBase):
 # --------------
 class BillCreate(BaseModel):
     # IDs are optional because the route logic will derive/validate them
-    issuer_store_id: Optional[str] = Field(None, description="Store issuing the bill (optional, derived from user)")
-    issuer_supplier_id: Optional[str] = Field(None, description="Supplier issuing the bill (optional, derived from user)")
+    issuer_store_id: Optional[uuid.UUID] = Field(None, description="Store issuing the bill (optional, derived from user)")
+    issuer_supplier_id: Optional[uuid.UUID] = Field(None, description="Supplier issuing the bill (optional, derived from user)")
     
     # Recipient: XOR enforced in route
-    customer_id: Optional[str] = Field(None, description="Customer receiving the bill (must be exclusive with patient_id)")
-    patient_id: Optional[str] = Field(None, description="Patient receiving the bill (must be exclusive with customer_id)")
+    customer_id: Optional[uuid.UUID] = Field(None, description="Customer receiving the bill (must be exclusive with patient_id)")
+    patient_id: Optional[uuid.UUID] = Field(None, description="Patient receiving the bill (must be exclusive with customer_id)")
     
-    product_id: Optional[str] = Field(None, description="Optional single product reference for the Bill header")
+    product_id: Optional[uuid.UUID] = Field(None, description="Optional single product reference for the Bill header")
 
     # Financials
     subtotal: float = Field(..., ge=0)
@@ -1148,7 +1152,7 @@ class BillCreate(BaseModel):
 
 
 class BillResp(BillCreate):
-    bill_id: str
+    bill_id: uuid.UUID
     created_at: datetime
     # Ensures BillItemResp is used for nested items
     items: List[BillItemResp] = Field(default_factory=list)
@@ -1165,6 +1169,8 @@ class ProductNested(BaseModel):
     dosage: Optional[str]
     form: Optional[str]
     category: Optional[str]
+    # Removed the obsolete 'expiry_date' field from the nested Product schema, 
+    # as the latest expiry is now tracked on the SupplierProduct model.
     image: Optional[str] = None
     image_mime: Optional[str] = None
 
@@ -1188,17 +1194,24 @@ class SupplierProductBase(BaseModel):
     supplier_sku: Optional[str] = None
     lead_time_days: Optional[int] = None
     price: Optional[condecimal(max_digits=18, decimal_places=2)] = None
+    
+    # ✅ NEW: Add the latest_expiry_date field here, as it's a property of the SupplierProduct record
+    latest_expiry_date: Optional[date] = None
+
+    supplier: SupplierNested
 
 class SupplierProductCreate(SupplierProductBase):
-    product_id: UUID  # client must provide only product_id
+    product_id: uuid.UUID  # client must provide only product_id
 
 class SupplierProductResponse(SupplierProductBase):
-    supplier_product_id: UUID
-    supplier_id: UUID
-    product_id: UUID
+    supplier_product_id: uuid.UUID
+    supplier_id: uuid.UUID
+    product_id: uuid.UUID
     created_at: datetime
     product: ProductNested
     supplier: SupplierNested
+    
+    # latest_expiry_date is inherited from SupplierProductBase
 
     class Config:
         from_attributes = True
@@ -1209,17 +1222,36 @@ class SupplierProductByNameCreate(SupplierProductBase):
     class Config:
         from_attributes = True
 
+class SupplierProductLinkCreate(BaseModel):
+    # Fields to match the global product
+    name: str
+    dosage: Optional[str] = None
+    brand: Optional[str] = None
+    form: Optional[str] = None
+    category: Optional[str] = None
+
+    # Fields for the SupplierProduct link record
+    supplier_sku: Optional[str] = None
+    lead_time_days: Optional[int] = None
+    price: Optional[condecimal(max_digits=18, decimal_places=2)] = None
+    
+    # ✅ Existing: Field to track the latest expiry date from the supplier's batch
+    latest_expiry_date: Optional[date] = None 
+
+    class Config:
+        from_attributes = True
+
 # -------------------------
 # Store Settings
 # -------------------------
 class StoreSettingsCreate(BaseSchema):
-    store_id: str
+    store_id: uuid.UUID
     accepts_online_orders: bool = True
     notif_on_low_stock: bool = True
     low_stock_threshold: int = 5
 
 class StoreSettingsResp(StoreSettingsCreate):
-    store_settings_id: str
+    store_settings_id: uuid.UUID
     created_at: datetime
     class Config:
         from_attributes = True
@@ -1229,13 +1261,13 @@ class StoreSettingsResp(StoreSettingsCreate):
 # Audit Log
 # -------------------------
 class AuditLogCreate(BaseSchema):
-    store_id: str
-    user_id: Optional[str] = None
+    store_id: uuid.UUID
+    user_id: Optional[uuid.UUID] = None
     action: str
     details: Optional[str] = None
 
 class AuditLogResp(AuditLogCreate):
-    log_id: str
+    log_id: uuid.UUID
     timestamp: datetime
     class Config:
         from_attributes = True
@@ -1245,8 +1277,8 @@ class AuditLogResp(AuditLogCreate):
 # Medical Store Dashboard
 # -------------------------
 class MedicalStoreDashboardResp(BaseSchema):
-    dashboard_id: str
-    store_id: str
+    dashboard_id: uuid.UUID
+    store_id: uuid.UUID
     total_inventory_items: int
     total_products: int
     total_customers: int
@@ -1260,7 +1292,7 @@ class MedicalStoreDashboardResp(BaseSchema):
 # Base Cart Item Schema
 # -------------------------
 class CartItemBase(BaseModel):
-    product_id: str = Field(..., description="UUID of the product")
+    product_id: uuid.UUID = Field(..., description="UUID of the product")
     quantity: int = Field(1, description="Number of units added to the cart")
     price: float = Field(..., description="Unit price of the product")
     subtotal: Optional[float] = None
@@ -1273,7 +1305,7 @@ class CartItemBase(BaseModel):
 # Create Cart Item Schema
 # -------------------------
 class CartItemCreate(BaseModel):
-    product_id: str
+    product_id: uuid.UUID
     quantity: int = 1
 
 
@@ -1281,7 +1313,7 @@ class CartItemCreate(BaseModel):
 # Cart Item Response Schema
 # -------------------------
 class CartItemOut(CartItemBase):
-    cart_item_id: str
+    cart_item_id: uuid.UUID
     created_at: datetime
 
 
@@ -1289,8 +1321,8 @@ class CartItemOut(CartItemBase):
 # Base Cart Schema
 # -------------------------
 class CartBase(BaseModel):
-    store_id: str
-    user_id: Optional[str] = None
+    store_id: uuid.UUID
+    user_id: Optional[uuid.UUID] = None
 
     class Config:
         from_attributes = True
@@ -1300,15 +1332,15 @@ class CartBase(BaseModel):
 # Cart Creation Schema
 # -------------------------
 class CartCreate(BaseModel):
-    store_id: str
+    store_id: uuid.UUID
 
 
 # -------------------------
 # Cart Response Schema
 # -------------------------
 class CartOut(BaseModel):
-    cart_id: str
-    store_id: str
+    cart_id: uuid.UUID
+    store_id: uuid.UUID
     items: List[CartItemOut] = []
     total: float
     created_at: datetime
@@ -1323,7 +1355,7 @@ class CartOut(BaseModel):
 # -------------------------
 class CheckoutResponse(BaseModel):
     message: str
-    bill_id: str
+    bill_id: uuid.UUID
     total: float
 
 #-----------------------------
@@ -1335,8 +1367,8 @@ class CheckoutResponse(BaseModel):
 # -----------------------------
 class OrderItemCreate(BaseModel):
     # Use UUID for ID fields for strict validation
-    product_id: UUID
-    supplier_id: UUID
+    product_id: uuid.UUID
+    supplier_id: uuid.UUID
     quantity: int = Field(..., gt=0) # Ensure quantity is positive
     price: float = Field(..., ge=0)  # Ensure price is non-negative
     total_price: float = Field(..., ge=0)
@@ -1346,8 +1378,8 @@ class OrderItemCreate(BaseModel):
 # -----------------------------
 class OrderCreate(BaseModel):
     # Use UUID for ID fields for strict validation
-    store_id: UUID
-    supplier_id: UUID
+    store_id: uuid.UUID
+    supplier_id: uuid.UUID
     
     # order_date is typically set by the server, but kept optional for flexibility
     order_date: Optional[datetime] = None
@@ -1370,8 +1402,8 @@ class OrderCreate(BaseModel):
 # -----------------------------
 class OrderItemResp(OrderItemCreate):
     # IDs generated by the system should be UUIDs
-    order_item_id: UUID
-    order_id: UUID
+    order_item_id: uuid.UUID
+    order_id: uuid.UUID
     
     # Optionally add created_at/updated_at if OrderItem model has them
     created_at: Optional[datetime] = None
@@ -1387,9 +1419,9 @@ class OrderItemResp(OrderItemCreate):
 # -----------------------------
 class OrderResp(BaseModel):
     # IDs generated by the system should be UUIDs
-    order_id: UUID
-    store_id: UUID
-    supplier_id: UUID
+    order_id: uuid.UUID
+    store_id: uuid.UUID
+    supplier_id: uuid.UUID
     
     order_date: Optional[datetime]
     status: str
@@ -1433,7 +1465,7 @@ class PlanCreate(PlanBase):
 
 
 class PlanOut(PlanBase):
-    id: UUID
+    id: uuid.UUID
     created_at: datetime
 
     class Config:
@@ -1444,7 +1476,7 @@ class PlanOut(PlanBase):
 # SUBSCRIPTION SCHEMAS
 # ---------------------------
 class SubscriptionBase(BaseModel):
-    plan_id: UUID
+    plan_id: uuid.UUID
     razorpay_subscription_id: str
     razorpay_plan_id: str
     status: Optional[SubscriptionStatus] = SubscriptionStatus.created
@@ -1454,7 +1486,7 @@ class SubscriptionBase(BaseModel):
 
 
 class SubscriptionCreate(SubscriptionBase):
-    user_id: UUID
+    user_id: uuid.UUID
 
 
 class SubscriptionUpdate(BaseModel):
@@ -1464,8 +1496,8 @@ class SubscriptionUpdate(BaseModel):
 
 
 class SubscriptionOut(SubscriptionBase):
-    id: UUID
-    user_id: UUID
+    id: uuid.UUID
+    user_id: uuid.UUID
     created_at: datetime
     cancelled_at: Optional[datetime] = None
 
@@ -1492,7 +1524,7 @@ class CreateOrderRequest(BaseModel):
 # Razorpay Order Response
 # -----------------------------
 class RazorpayOrderResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     amount: float
     currency: str
     status: str

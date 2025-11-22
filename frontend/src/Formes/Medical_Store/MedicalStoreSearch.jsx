@@ -3,6 +3,8 @@ import axios from "axios";
 import "./MedicalStoreSearch.css";
 import Notification from "../../Notification/Notification"; // global notification
 
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 const MedicalStoreSearch = () => {
   const [filters, setFilters] = useState({
     owner_name: "",
@@ -45,7 +47,7 @@ const MedicalStoreSearch = () => {
       });
 
       const response = await axios.get(
-        "http://127.0.0.1:8000/medical_store/get_all_store/",
+        `${API_BASE}/get_all_store/`,
         { params }
       );
 

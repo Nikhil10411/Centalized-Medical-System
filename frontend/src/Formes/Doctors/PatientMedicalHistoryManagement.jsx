@@ -4,7 +4,7 @@ import axios from "axios";
 import Notification from "../../Notification/Notification";
 import styles from './PatientMedicalHistoryManagement.module.css';
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "http://localhost:8000/api/medical_store";
 
 // Helper to extract filename from response Content-Disposition header
 const getFilenameFromResponse = (response) => {

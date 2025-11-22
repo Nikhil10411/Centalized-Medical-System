@@ -4,6 +4,8 @@ import Notification from "../../Notification/Notification";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./CustomerManagement.module.css";
 
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 const emptyCustomer = {
   name: "",
   phone: "",
@@ -51,7 +53,7 @@ export default function CustomerManagement() {
     try {
       const token = localStorage.getItem("access_token");
       const query = Object.fromEntries(Object.entries(params).filter(([_, v]) => v));
-      const res = await axios.get("http://127.0.0.1:8000/medical_store/customers/find/", {
+      const res = await axios.get(`${API_BASE}/customers/find/`, {
         params: query,
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -74,7 +76,7 @@ export default function CustomerManagement() {
     try {
       const token = localStorage.getItem("access_token");
       const dataToSend = sanitizeCustomerData(formData);
-      await axios.post("http://127.0.0.1:8000/medical_store/customers", dataToSend, {
+      await axios.post(`${API_BASE}/customers`, dataToSend, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotification({ message: "Customer added!", type: "success" });
@@ -111,7 +113,7 @@ export default function CustomerManagement() {
       const token = localStorage.getItem("access_token");
       const encodedName = encodeURIComponent(editForm.name);
       const dataToSend = sanitizeCustomerData(editForm);
-      await axios.put(`http://127.0.0.1:8000/medical_store/customers/update/${encodedName}`, dataToSend, {
+      await axios.put(`${API_BASE}/customers/update/${encodedName}`, dataToSend, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotification({ message: "Customer updated!", type: "success" });
@@ -136,7 +138,7 @@ export default function CustomerManagement() {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete("http://127.0.0.1:8000/medical_store/customers/delete/", {
+      await axios.delete(`${API_BASE}/customers/delete/`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           name: customer.name,

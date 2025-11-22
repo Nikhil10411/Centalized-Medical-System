@@ -27,6 +27,7 @@ import PatientMedicalHistoryManagement from './Formes/Doctors/PatientMedicalHist
 import PatientMedicalHistory from './Formes/Patients/PatientMedicalHistory';
 import ProductList from './Pages/ViewProducts/ProductList';
 import CartView from './Pages/ViewProducts/CartView';
+import SupplierRegistrationForm from './Formes/SupplierRegistrationForm';
 
 const App = () => (
   <div className="app-layout">
@@ -56,6 +57,7 @@ const App = () => (
         <Route path="/patient-medical-history" element={<PatientMedicalHistoryManagement />} />
         <Route path="/doctor-registration" element={<DoctorRegistrationForm />} />
         <Route path="/medical-store-dashboard" element={<MedicalStoreDashboard />} />
+         <Route path="/supplier-registration" element={<SupplierRegistrationForm/>} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/cart" element={<CartView />} />
         {/* 404 */}

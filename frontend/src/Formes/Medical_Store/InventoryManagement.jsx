@@ -4,6 +4,8 @@ import axios from "axios";
 import Notification from "../../Notification/Notification";
 import "./InventoryManagement.css";
 
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 export default function InventoryManager() {
   const [inventory, setInventory] = useState([]);
   const [form, setForm] = useState({
@@ -60,7 +62,7 @@ export default function InventoryManager() {
   const fetchInventory = async () => {
     try {
       const res = await axios.get(
-        "http://127.0.0.1:8000/medical_store/inventory/all",
+        `${API_BASE}/inventory/all`,
         { headers: getAuthHeaders() }
       );
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
@@ -90,7 +92,7 @@ export default function InventoryManager() {
       const params = {};
       Object.entries(search).forEach(([k, v]) => { if (v) params[k] = v; });
       const res = await axios.get(
-        "http://127.0.0.1:8000/medical_store/inventory/search",
+        `${API_BASE}/inventory/search`,
         { params, headers: getAuthHeaders() }
       );
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
@@ -125,7 +127,7 @@ export default function InventoryManager() {
     try {
       // Send JSON directly
       await axios.post(
-        "http://127.0.0.1:8000/medical_store/inventory/by-name",
+        `${API_BASE}/inventory/add`,
         {
           product_name: form.product_name,
           batch_no: form.batch_no,
@@ -166,7 +168,7 @@ export default function InventoryManager() {
       const formData = new FormData();
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
       await axios.put(
-        "http://127.0.0.1:8000/medical_store/inventory/update",
+        `${API_BASE}/inventory/update`,
         formData,
         { headers: getAuthHeaders() }
       );
@@ -189,7 +191,7 @@ export default function InventoryManager() {
       return;
     try {
       await axios.delete(
-        "http://127.0.0.1:8000/medical_store/inventory/delete",
+        `${API_BASE}/inventory/delete`,
         {
           params: { product_name: item.product_name, brand: item.product?.brand },
           headers: getAuthHeaders(),

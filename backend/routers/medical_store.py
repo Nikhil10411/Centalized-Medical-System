@@ -1,7 +1,9 @@
 # routers/store.py
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile, BackgroundTasks, status, Query, Request
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from fastapi_pagination import Page, paginate
 from fastapi.encoders import jsonable_encoder
@@ -71,7 +73,7 @@ def validate_uuid(value: Optional[str], field_name: str) -> Optional[str]:
 # -------------------------
 # CREATE Store (Protected - Only CHEMIST)
 # -------------------------
-@router.post("/register", response_model=MedicalStoreCreateSuccess, status_code=201)
+@router.post("/register", response_model=MedicalStoreCreateSuccess, status_code=status.HTTP_201_CREATED)
 async def create_medical_store(
     store_name: str = Form(...),
     owner_name: str = Form(...),
@@ -92,15 +94,14 @@ async def create_medical_store(
 ):
     store_id = str(uuid.uuid4())
 
- #    ----------------- Validate Owner -----------------
+    # Owner Validation
     if owner_name.strip().lower() != current_user.username.strip().lower():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Owner name does not match your account information."
         )
 
-
-    # Duplicate checks
+    # Duplicate checks before costly operations
     if db.query(MedicalStore).filter(MedicalStore.owner_id == str(current_user.id)).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -117,7 +118,7 @@ async def create_medical_store(
             detail=f"A store with the phone number '{phone}' is already registered."
         )
 
-    # Geocoding
+    # Geocode address
     full_address = f"{address or ''}, {locality or ''}, {city or ''}, {pin_code or ''}"
     geolocator = Nominatim(user_agent="medical_store_app")
     location = try_geocode(geolocator, [
@@ -128,6 +129,13 @@ async def create_medical_store(
     latitude, longitude = (location.latitude, location.longitude) if location else (None, None)
 
     try:
+        # Read files before adding to DB to avoid exceptions post commit
+        license_doc_bytes = await license_document.read() if license_document else None
+        license_mime = license_document.content_type if license_document else None
+
+        store_photo_bytes = await store_photo.read() if store_photo else None
+        photo_mime = store_photo.content_type if store_photo else None
+
         new_store = MedicalStore(
             store_id=store_id,
             store_name=store_name,
@@ -146,10 +154,10 @@ async def create_medical_store(
             delivery_radius_km=delivery_radius_km,
             latitude=latitude,
             longitude=longitude,
-            license_document=await license_document.read() if license_document else None,
-            license_mime=license_document.content_type if license_document else None,
-            store_photo=await store_photo.read() if store_photo else None,
-            photo_mime=store_photo.content_type if store_photo else None,
+            license_document=license_doc_bytes,
+            license_mime=license_mime,
+            store_photo=store_photo_bytes,
+            photo_mime=photo_mime,
             created_at=datetime.utcnow(),
         )
         db.add(new_store)
@@ -184,10 +192,12 @@ async def create_medical_store(
 
     except Exception as e:
         db.rollback()
+        logger.error(f"Error while creating Medical Store: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error while creating Medical Store: {str(e)}"
+            detail="Error while creating Medical Store. Please try again."
         )
+
 
 # -------------------------
 # READ: Get all stores (Public + Search + Medicine Availability)
@@ -488,11 +498,15 @@ def delete_my_store(
         )
 
 # ------------------------
-# Add Inventory by Product Name
+# Add Inventory (With Full Product Info From Form)
 # ------------------------
-@router.post("/inventory/by-name", response_model=InventoryResponse)
-def add_inventory_by_name(
+@router.post("/inventory/add", response_model=InventoryResponse)
+def add_inventory(
     product_name: str = Form(...),
+    brand: str = Form(...),
+    dosage: str = Form(...),
+    form: str = Form(...),
+    category: str = Form(...),
     batch_no: str = Form(...),
     expiry_date: str = Form(...),
     quantity: int = Form(...),
@@ -502,38 +516,96 @@ def add_inventory_by_name(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        # Convert expiry_date from string to datetime
+        # Convert expiry string to datetime
         expiry_dt = datetime.fromisoformat(expiry_date)
 
-        # ------------------------
-        # 1. Verify store
-        # ------------------------
+        # ============================
+        # 1. FIND STORE (LOGICALLY CORRECT)
+        # ============================
         if current_user.role == RoleEnum.CHEMIST:
             store = db.query(MedicalStore).filter(
                 MedicalStore.owner_id == str(current_user.id)
             ).first()
             if not store:
-                raise HTTPException(status_code=404, detail="No store found for this chemist")
+                raise HTTPException(status_code=404, detail="Store not found for this chemist")
+
         elif current_user.role == RoleEnum.ADMIN:
             if not store_id:
-                raise HTTPException(status_code=400, detail="store_id is required for admin")
-            store = db.query(MedicalStore).filter(MedicalStore.store_id == store_id).first()
+                raise HTTPException(status_code=400, detail="store_id required for admin")
+            store = db.query(MedicalStore).filter(
+                MedicalStore.store_id == store_id
+            ).first()
             if not store:
                 raise HTTPException(status_code=404, detail="Store not found")
+
         else:
-            raise HTTPException(status_code=403, detail="Role not allowed")
+            raise HTTPException(status_code=403, detail="Unauthorized role")
 
-        # ------------------------
-        # 2. Lookup product by name
-        # ------------------------
-        product = db.query(Product).filter(Product.name == product_name).first()
+
+        # ============================
+        # 2. CHECK IF PRODUCT EXISTS
+        # ============================
+        product = db.query(Product).filter(
+            Product.name == product_name,
+            Product.brand == brand,
+            Product.dosage == dosage,
+            Product.form == form,
+            Product.category == category
+        ).first()
+
+        # If product does not exist → create automatically
         if not product:
-            raise HTTPException(status_code=404, detail=f"Product '{product_name}' not found")
+            product = Product(
+                product_id=str(uuid.uuid4()),
+                name=product_name,
+                brand=brand,
+                dosage=dosage,
+                form=form_value,
+                category=category
+            )
+            db.add(product)
+            db.commit()
+            db.refresh(product)
 
-        # ------------------------
-        # 3. Create inventory entry
-        # ------------------------
-        new_inventory = Inventory(
+
+        # ============================
+        # 3. CHECK IF SAME BATCH EXISTS
+        # ============================
+        existing_batch = db.query(Inventory).filter(
+            Inventory.product_id == product.product_id,
+            Inventory.store_id == store.store_id,
+            Inventory.batch_no == batch_no
+        ).first()
+
+        if existing_batch:
+
+            # A. Expiry must match
+            if existing_batch.expiry_date != expiry_dt:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Expiry mismatch: Existing batch has expiry {existing_batch.expiry_date.date()}."
+                )
+
+            # B. Price must match
+            if float(existing_batch.price) != float(price):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Price mismatch: Existing batch price is {existing_batch.price}."
+                )
+
+            # C. Add quantity (merge stock)
+            existing_batch.quantity += quantity
+            existing_batch.last_updated = datetime.utcnow()
+
+            db.commit()
+            db.refresh(existing_batch)
+            return existing_batch
+
+
+        # ============================
+        # 4. CREATE NEW INVENTORY ENTRY
+        # ============================
+        new_inv = Inventory(
             inventory_id=str(uuid.uuid4()),
             store_id=store.store_id,
             product_id=product.product_id,
@@ -544,30 +616,30 @@ def add_inventory_by_name(
             price=price
         )
 
-        db.add(new_inventory)
+        db.add(new_inv)
         db.commit()
-        db.refresh(new_inventory)
+        db.refresh(new_inv)
 
-        # ------------------------
-        # 4. Return response with nested product
-        # ------------------------
+        # ============================
+        # 5. Response
+        # ============================
         return InventoryResponse(
-            inventory_id=new_inventory.inventory_id,
-            store_id=new_inventory.store_id,
-            product_id=new_inventory.product_id,
-            product_name=new_inventory.product_name,
-            batch_no=new_inventory.batch_no,
-            expiry_date=new_inventory.expiry_date,
-            quantity=new_inventory.quantity,
-            price=new_inventory.price,
-            created_at=new_inventory.created_at,
-            last_updated=new_inventory.last_updated,
+            inventory_id=new_inv.inventory_id,
+            store_id=new_inv.store_id,
+            product_id=new_inv.product_id,
+            product_name=new_inv.product_name,
+            batch_no=new_inv.batch_no,
+            expiry_date=new_inv.expiry_date,
+            quantity=new_inv.quantity,
+            price=new_inv.price,
+            created_at=new_inv.created_at,
+            last_updated=new_inv.last_updated,
             product=ProductNested(
                 brand=product.brand,
                 generic_name=getattr(product, "generic_name", None),
-                dosage=getattr(product, "dosage", None),
-                form=getattr(product, "form", None),
-                category=getattr(product, "category", None)
+                dosage=product.dosage,
+                form=product.form,
+                category=product.category
             )
         )
 
@@ -575,7 +647,7 @@ def add_inventory_by_name(
         raise
     except Exception as e:
         import traceback
-        print("Error in add_inventory_by_name:\n", traceback.format_exc())
+        print("Error in add_inventory:\n", traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -843,15 +915,19 @@ def create_supplier(
     - If CHEMIST registers → supplier linked to chemist's store_id.
     - If SUPPLIER registers → not linked to any store (store_id=None).
     """
-    # 1. Check for duplicate supplier by phone or email globally
+
+    # 1. Check for duplicate supplier by phone or email ONLY inside Supplier table
     existing_supplier = db.query(Supplier).filter(
-        (Supplier.phone == supplier.phone) | (Supplier.email == supplier.email)
+        (Supplier.phone == supplier.phone) |
+        (Supplier.email == supplier.email) 
     ).first()
+
     if existing_supplier:
         raise HTTPException(
             status_code=400,
             detail="Supplier with this phone or email already exists."
         )
+
     # 2. Determine store_id based on role
     store_id = None
     if current_user.role == RoleEnum.CHEMIST:
@@ -864,13 +940,14 @@ def create_supplier(
                 detail="Chemist does not own any store to link the supplier."
             )
         store_id = chemist_store.store_id
+
     # 3. Create Supplier
     new_supplier = Supplier(
-        supplier_id=str(uuid.uuid4()),
-        supplier_name=supplier.supplier_name,
+        supplier_id=str(current_user.id),
+        supplier_name=current_user.username,
         contact_name=supplier.contact_name,
         phone=supplier.phone,
-        email=supplier.email,
+        email=supplier.email,               # <-- IMPORTANT: use supplier.email, not current_user.email
         address=supplier.address,
         city=supplier.city,
         pin_code=supplier.pin_code,
@@ -878,12 +955,14 @@ def create_supplier(
         gender=supplier.gender.lower() if supplier.gender else None,
         created_at=datetime.utcnow(),
         store_id=store_id,
-        created_by=str(current_user.id)
+        created_by=current_user.id
     )
+
     db.add(new_supplier)
     db.commit()
     db.refresh(new_supplier)
     return new_supplier
+
 
 # Get All Suppliers
 @router.get("/supplier/get_all_suppliers", response_model=List[SupplierResponse])
@@ -895,16 +974,20 @@ def get_suppliers(
     return suppliers
 
 # Get Supplier by ID
-@router.get("/supplier/{supplier_id}", response_model=SupplierResponse)
-def get_supplier(
-    supplier_id: str,
+@router.get("/supplier/me", response_model=SupplierResponse)
+def get_my_supplier(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(role_required(RoleEnum.CHEMIST))
+    current_user: dict = Depends(role_required(RoleEnum.SUPPLIER))
 ):
-    supplier = db.query(Supplier).filter(Supplier.supplier_id == supplier_id).first()
+    supplier = db.query(Supplier).filter(
+        Supplier.user_id == current_user["user_id"]
+    ).first()
+
     if not supplier:
-        raise HTTPException(status_code=404, detail="Supplier not found")
+        raise HTTPException(status_code=404, detail="Supplier for this user not found")
+    
     return supplier
+
 
 # Search suppliers linked to store with filters
 @router.get("/stores/suppliers/search", response_model=Page[SupplierResponse])
@@ -1014,42 +1097,65 @@ def delete_supplier(
     current_user: object = Depends(role_required(RoleEnum.SUPPLIER, RoleEnum.CHEMIST))
 ):
     """
-    Delete supplier with role-based rules:
-    - SUPPLIER → can delete themselves completely from Supplier table.
-    - CHEMIST → can only unlink supplier from their store (supplier record remains).
+    Delete supplier with correct role logic:
+    - SUPPLIER → can delete ONLY their own supplier account.
+    - CHEMIST → can only unlink supplier from their store.
     """
-    user_id = getattr(current_user, "id", None) or getattr(current_user, "user_id", None)
-    supplier = db.query(Supplier).filter(Supplier.supplier_id == supplier_id).first()
+    # Validate UUID
+    try:
+        supplier_uuid = uuid.UUID(supplier_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid supplier ID.")
+
+    # Load supplier
+    supplier = db.query(Supplier).filter(Supplier.supplier_id == supplier_uuid).first()
     if not supplier:
         raise HTTPException(status_code=404, detail="Supplier not found")
+
+    # =========================================================
+    # CASE 1: SUPPLIER → Delete their own supplier profile
+    # =========================================================
     if current_user.role == RoleEnum.SUPPLIER:
-        if supplier.email != current_user.email and supplier.phone != current_user.phone:
+        # A supplier can delete ONLY their own supplier record
+        if supplier.email != current_user.email and supplier.created_by != current_user.id:
             raise HTTPException(
                 status_code=403,
-                detail="You can only delete your own supplier account."
+                detail="You can delete only your own supplier account."
             )
+
         db.delete(supplier)
         db.commit()
-        return {"message": "Supplier account deleted successfully"}
-    elif current_user.role == RoleEnum.CHEMIST:
-        chemist_store = db.query(MedicalStore).filter(
-            MedicalStore.owner_id == user_id
-        ).first()
+        return {"message": "Supplier account deleted successfully."}
+
+    # =========================================================
+    # CASE 2: CHEMIST → Unlink supplier from chemist's store only
+    # =========================================================
+    if current_user.role == RoleEnum.CHEMIST:
+        chemist_store = (
+            db.query(MedicalStore)
+            .filter(MedicalStore.owner_id == current_user.id)
+            .first()
+        )
+
         if not chemist_store:
             raise HTTPException(
                 status_code=400,
-                detail="Chemist does not own any store."
+                detail="You do not own any store."
             )
+
+        # Ensure supplier is linked to this chemist’s store
         if supplier.store_id != chemist_store.store_id:
             raise HTTPException(
                 status_code=403,
-                detail="Supplier is not linked to your store."
+                detail="This supplier is not linked to your store."
             )
+
+        # Unlink the supplier (do NOT delete)
         supplier.store_id = None
         db.commit()
-        db.refresh(supplier)
-        return {"message": "Supplier unlinked from store successfully"}
+        return {"message": "Supplier unlinked from store successfully."}
 
+    
 # ========= PRODUCT ROUTES =========
 
 # Create Global Product
@@ -1136,12 +1242,26 @@ async def create_product(
         raise HTTPException(status_code=400, detail=f"Failed to create product: {str(e)}")
 
 # ---------------------------
-# Get All Products
+# ✅ Get All Products (Safe + Always Responds)
 # ---------------------------
 @router.get("/product/get_all_products", response_model=List[ProductResponse])
-def get_all_products(db: Session = Depends(get_db),current_user=Depends(role_required([RoleEnum.SUPPLIER, RoleEnum.CHEMIST]))
+def get_all_products(
+    db: Session = Depends(get_db),
+    current_user=Depends(role_required([RoleEnum.SUPPLIER, RoleEnum.CHEMIST]))
 ):
-    return db.query(Product).all()
+    try:
+        products = db.query(Product).all()
+        if not products:
+            # Return an empty list instead of failing silently
+            return []
+        return products
+
+    except Exception as e:
+        # This prevents "ERR_EMPTY_RESPONSE" and gives a clear message
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving products: {str(e)}"
+        )
 
 
 # Get product by name (case-insensitive)
@@ -1213,32 +1333,54 @@ def delete_product(product_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Product deleted successfully"}
 
-# Link Product to Supplier by Name
-@router.post("/supplier/products/by-name", response_model=SupplierProductResponse)
-def add_supplier_product_by_name(
-    data: SupplierProductByNameCreate,
+# -----------------------------------------------------
+# Link Product to Supplier by Detailed Match and Expiry
+# -----------------------------------------------------
+@router.post("/supplier/products/link-detailed", response_model=SupplierProductResponse)
+def link_supplier_product_detailed(
+    data: SupplierProductLinkCreate,
     db: Session = Depends(get_db),
     current_user: object = Depends(role_required(RoleEnum.SUPPLIER))
 ):
     """
-    Link a product to the currently logged-in supplier by product name.
-    - SUPPLIER: can only link products to themselves.
+    Links a global product to the current supplier using detailed product fields 
+    (dosage, brand, form, category) for accurate matching, and records the 
+    latest batch expiry date.
     """
     try:
+        # 1. Find the current Supplier record
         supplier = (
             db.query(Supplier)
             .filter(Supplier.email == current_user.email)
             .first()
         )
         if not supplier:
-            raise HTTPException(status_code=404, detail="Supplier not found")
-        product = (
-            db.query(Product)
-            .filter(Product.name.ilike(data.name.strip()))
-            .first()
+            raise HTTPException(status_code=404, detail="Supplier record not found. Please complete supplier profile.")
+
+        # 2. Build the Product matching query (Case-insensitive check for all details)
+        product_query = db.query(Product).filter(
+            func.lower(Product.name) == func.lower(data.name.strip())
         )
+
+        # Conditionally add filters for the optional fields for a strict match
+        if data.dosage is not None:
+            product_query = product_query.filter(func.lower(Product.dosage) == func.lower(data.dosage.strip()))
+        
+        if data.brand is not None:
+            product_query = product_query.filter(func.lower(Product.brand) == func.lower(data.brand.strip()))
+        
+        if data.form is not None:
+            product_query = product_query.filter(func.lower(Product.form) == func.lower(data.form.strip()))
+            
+        if data.category is not None:
+            product_query = product_query.filter(func.lower(Product.category) == func.lower(data.category.strip()))
+
+        product = product_query.first()
+        
         if not product:
-            raise HTTPException(status_code=404, detail="Product not found")
+            raise HTTPException(status_code=404, detail="Product not found with the specified details.")
+
+        # 3. Check for existing link (to prevent 400 Conflict)
         existing_link = (
             db.query(SupplierProduct)
             .filter(
@@ -1248,64 +1390,91 @@ def add_supplier_product_by_name(
             .first()
         )
         if existing_link:
-            raise HTTPException(status_code=400, detail="Product already linked to supplier")
+            raise HTTPException(status_code=400, detail="Product is already linked to this supplier.")
+
+        # 4. Create the new SupplierProduct link
         new_link = SupplierProduct(
-            supplier_product_id=str(uuid.uuid4()),
+            # Assuming SupplierProduct ID is handled by SQLAlchemy defaults/triggers
             supplier_id=supplier.supplier_id,
             product_id=product.product_id,
             supplier_sku=data.supplier_sku,
             price=data.price,
             lead_time_days=data.lead_time_days,
+            # ✅ NEW: Save the expiry date
+            latest_expiry_date=data.latest_expiry_date, 
             created_at=datetime.utcnow(),
         )
+        
         db.add(new_link)
         db.commit()
-        db.refresh(new_link)
-        return new_link
+        
+        # 5. Eager load and return the result for Pydantic validation
+        fully_loaded_link = (
+            db.query(SupplierProduct)
+            .options(
+                joinedload(SupplierProduct.product),
+                joinedload(SupplierProduct.supplier)
+            )
+            .filter(SupplierProduct.supplier_product_id == new_link.supplier_product_id)
+            .first()
+        )
+        
+        if not fully_loaded_link:
+             raise HTTPException(status_code=500, detail="Failed to retrieve linked record after creation.") 
+
+        return fully_loaded_link
+    
     except HTTPException:
         raise
     except Exception as e:
+        db.rollback() 
         import traceback
-        print("Error in add_supplier_product_by_name route:\n", traceback.format_exc())
+        print("Error in link_supplier_product_detailed route:\n", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
+    
 # List Of The Supplier Products
-@router.get("/{supplier_id}/products", response_model=List[SupplierProductResponse])
+@router.get("/suppliers/products", response_model=List[SupplierProductResponse])
 def get_supplier_products(
-    supplier_id: str,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(role_required([RoleEnum.SUPPLIER, RoleEnum.CHEMIST]))
+    current_user: User = Depends(role_required([RoleEnum.SUPPLIER, RoleEnum.CHEMIST])),
+    # For Chemist, allow supplier_id to be passed as a query parameter
+    supplier_id_param: Optional[str] = Query(None, alias="supplier_id")
 ):
-    supplier = db.query(Supplier).filter(Supplier.supplier_id == supplier_id).first()
-    if not supplier:
-        raise HTTPException(status_code=404, detail="Supplier not found")
-    return db.query(SupplierProduct).filter(SupplierProduct.supplier_id == supplier_id).all()
+    """
+    Retrieves a list of products offered by a supplier.
+    - SUPPLIER: ID is pulled from their user record.
+    - CHEMIST: ID must be passed via the 'supplier_id' query parameter.
+    """
+    actual_supplier_id = None
 
-# Useful Logical Routes
-@router.get("/{supplier_id}/supplied-medicines")
-def get_supplied_medicines(
-    supplier_id: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(role_required([RoleEnum.SUPPLIER, RoleEnum.ADMIN]))
-):
-    supplier = db.query(Supplier).filter(Supplier.supplier_id == supplier_id).first()
-    if not supplier:
-        raise HTTPException(status_code=404, detail="Supplier not found")
-    results = (
-        db.query(Product.name, Product.brand, SupplierProduct.price, SupplierProduct.lead_time_days)
-        .join(SupplierProduct, Product.product_id == SupplierProduct.product_id)
-        .filter(SupplierProduct.supplier_id == supplier_id)
+    if current_user.role == RoleEnum.SUPPLIER:
+        # Safely attempt to get supplier_id from the User object for the SUPPLIER role.
+        # This prevents the AttributeError if the attribute is missing.
+        actual_supplier_id = getattr(current_user, 'supplier_id', None)
+
+        if not actual_supplier_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supplier ID missing in user record. Please check user setup."
+            )
+
+    elif current_user.role == RoleEnum.CHEMIST:
+        # For the CHEMIST role, the ID MUST come from the query parameter.
+        actual_supplier_id = supplier_id_param
+
+        if not actual_supplier_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Chemist must provide a 'supplier_id' query parameter to fetch products."
+            )
+
+    # Execute the query using the determined ID
+    # Note: Using .filter() is generally safer than .get() for collection queries
+    return (
+        db.query(SupplierProduct)
+        .filter(SupplierProduct.supplier_id == actual_supplier_id)
         .all()
     )
-    return [
-        {
-            "name": r[0],
-            "brand": r[1],
-            "price": r[2],
-            "lead_time_days": r[3]
-        }
-        for r in results
-    ]
 
 @router.get("/stats")
 def supplier_stats(

@@ -1,0 +1,126 @@
+/* 🌆 Background same as Supplier Carousel Image */
+.supplierWrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-image: url("../assets/Pharmacy.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+}
+
+/* 💎 Glassmorphism form card */
+.supplierCard {
+  width: 50%;
+  max-width: 750px;
+  background-color: rgba(26, 34, 63, 0.85);
+  backdrop-filter: blur(20px);
+  padding: 45px 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 35px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  animation: fadeIn 0.7s ease-in-out;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Title */
+.supplierTitle {
+  color: var(--primary-light);
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  letter-spacing: 0.5px;
+}
+
+/* Inputs + Select + Textarea */
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 14px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-light);
+  font-size: 15.5px;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  background: rgba(0, 216, 255, 0.15);
+  transform: scale(1.02);
+  outline: none;
+  box-shadow: 0 0 15px var(--primary-light);
+  color: white;
+  caret-color: var(--primary-light);
+}
+
+/* Textarea height */
+.form textarea {
+  height: 100px;
+  resize: none;
+}
+
+/* Button */
+.supplierBtn {
+  width: 220px;
+  padding: 14px;
+  background: linear-gradient(90deg, #0088cc, #00d0ff);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.supplierBtn:hover {
+  transform: scale(1.07);
+  background: linear-gradient(90deg, #00aaff, #1ee6ff);
+}
+
+/* 📱 Responsive breakpoints */
+@media (max-width: 1024px) {
+  .supplierCard {
+    width: 70%;
+  }
+}
+
+@media (max-width: 768px) {
+  .supplierCard {
+    width: 90%;
+    padding: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+  .supplierTitle {
+    font-size: 24px;
+  }
+
+  .supplierBtn {
+    width: 180px;
+    font-size: 15px;
+  }
+}

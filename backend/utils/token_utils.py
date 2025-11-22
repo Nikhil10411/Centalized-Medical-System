@@ -260,15 +260,33 @@ def get_current_staff_user(user: User = Depends(get_current_active_user)) -> Use
         return db.query(Hospital).filter(Hospital.role_id == user.id).first()
     raise HTTPException(403, "Unauthorized hospital access")
 '''
+# Assuming this is the content of your admin_required function file
+
 def admin_required(
     payload: dict = Depends(get_user_payload),
     db: Session = Depends(get_db)
 ) -> User:
+    """
+    Enforces Admin access by strictly checking the user's 'is_admin' flag.
+    This relies on the fact that only the startup user has is_admin=True.
+    """
+    
+    # 1. Fetch the User based on the decoded token payload
     user = db.query(User).filter(User.id == payload.get("user_id")).first()
+    
     if not user:
+        # User not found in DB (shouldn't happen with a valid token, but safe check)
         raise HTTPException(status_code=404, detail="User not found")
-    if not user.is_admin or user.role != RoleEnum.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # 2. Check the required 'is_admin' flag
+    if not user.is_admin:
+        # If the flag is False, block access
+        raise HTTPException(
+            status_code=403, 
+            detail="Admin access required (User is not an administrator)"
+        )
+        
+    # 3. Success: return the User object
     return user
 
 def get_current_doctor(

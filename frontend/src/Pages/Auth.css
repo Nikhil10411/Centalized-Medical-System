@@ -45,7 +45,7 @@
 }
 
 /* Inputs */
-.auth-card input {
+.auth-card input, .auth-card select.role-select {
   width: 100%;
   padding: 12px;
   margin-bottom: 15px;
@@ -56,15 +56,23 @@
   color: var(--text-light);
   outline: none;
   transition: background 0.3s, box-shadow 0.3s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .auth-card input::placeholder {
   color: #cfd8dc;
 }
 
-.auth-card input:focus {
+.auth-card input:focus, .auth-card select.role-select:focus {
   background: rgba(0, 216, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0,216,255,0.35);
+  box-shadow: 0 4px 15px rgba(0,216,255,0.25);
+}
+
+.auth-card select.role-select option {
+  background: #162038;
+  color: #fff;
 }
 
 /* Buttons */
@@ -85,7 +93,7 @@
 .auth-card button:hover, .logout-btn:hover {
   opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 216, 255, 0.45);
+  box-shadow: 0 8px 25px rgba(0, 216, 255, 0.38);
 }
 
 /* Links */
@@ -106,19 +114,33 @@
   color: var(--success);
 }
 
-/* Responsive */
-@media (max-width: 500px) {
+/* Small Devices */
+@media (max-width: 700px) {
   .auth-card, .logout-card {
-    padding: 25px 20px;
+    padding: 24px 12px;
+    max-width: 98vw;
   }
-
   .auth-card h2, .logout-card h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
+}
 
-  .auth-card input,
-  .auth-card button,
-  .logout-btn {
-    font-size: 0.95rem;
+@media (max-width: 400px) {
+  .auth-card, .logout-card {
+    padding: 15px 2vw;
+    font-size: 0.92rem;
+    min-width: 0;
   }
+  .auth-card button, .logout-btn,
+  .auth-card input, .auth-card select.role-select {
+    font-size: 0.94rem;
+    padding: 10px 8px;
+  }
+}
+
+/* Miscellaneous Style Fixes */
+.auth-card select.role-select {
+  margin-bottom: 18px;
+  cursor: pointer;
+  background: rgba(55, 82, 105, 0.85); /* fallback for older CSS */
 }

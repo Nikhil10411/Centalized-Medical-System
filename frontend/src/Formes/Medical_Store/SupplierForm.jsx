@@ -5,7 +5,6 @@ export default function SupplierForm({ form, onChange, onSubmit, onCancel, editi
     <section className="supplier-section supplier-form-section">
       <h2>{editing ? "Edit Supplier" : "Add Supplier"}</h2>
       <form onSubmit={onSubmit} className="supplier-form">
-        <input required name="supplier_name" placeholder="Supplier Name" value={form.supplier_name} onChange={onChange} />
         <input name="contact_name" placeholder="Contact Name" value={form.contact_name} onChange={onChange} />
         <input required name="phone" placeholder="Phone" value={form.phone} onChange={onChange} />
         <input name="email" placeholder="Email" type="email" value={form.email} onChange={onChange} />

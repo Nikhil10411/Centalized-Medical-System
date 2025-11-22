@@ -5,7 +5,7 @@ from sqlalchemy import ( UniqueConstraint,Column, LargeBinary,
                          CheckConstraint, DECIMAL, Computed, Table, Enum
 )
 
-from database import engine
+from database import Base, SessionLocal, engine
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
 from sqlalchemy.orm import relationship, declarative_base
@@ -17,11 +17,7 @@ def generate_uuid():
 
 Base = declarative_base()
 
-vw_MedicalStoreDashboard = Table(
-    "vw_MedicalStoreDashboard",
-    Base.metadata,
-    autoload_with=engine
-)
+
 # -----------------------------
 # ENUM for Subscription Status
 # -----------------------------
@@ -72,7 +68,7 @@ class User(Base):
     customer = relationship("Customer", back_populates="user", uselist=False)
     doctor_profile = relationship("Doctor", back_populates="user", uselist=False)
     subscriptions = relationship("Subscription", back_populates="user")
-
+    cart = relationship("Cart", back_populates="user", cascade="all, delete-orphan")
     #hospital = relationship("Hospital", back_populates="users")
    # patient = relationship("Patient", back_populates="user", uselist=False)
 
@@ -83,7 +79,7 @@ class User(Base):
 class Patient(Base):
     __tablename__ = "patients"
 
-    patient_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    patient_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(200), nullable=False)
     email = Column(String(255), nullable=True)
     phone = Column(String(50), nullable=True)
@@ -113,7 +109,7 @@ class Doctor(Base):
 
     # --- 1. CORE & PRIMARY KEY (Linked to User Table) ---
     # The doctor_id is a Foreign Key referencing the 'users' table.
-    doctor_id = Column(String(36), ForeignKey("users.id"), primary_key=True)
+    doctor_id = Column(UNIQUEIDENTIFIER, ForeignKey("users.id"), primary_key=True)
     
     # --- 2. ORIGINAL FIELDS RETAINED ---
     name = Column(String(200), nullable=False)
@@ -161,9 +157,9 @@ class Doctor(Base):
 class MedicalHistory(Base):
     __tablename__ = "patient_medical_history"
 
-    history_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    patient_id = Column(String(36), ForeignKey("patients.patient_id", ondelete="CASCADE"), nullable=False)
-    doctor_id = Column(String(36), ForeignKey("doctors.doctor_id"), nullable=False)
+    history_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    patient_id = Column(UNIQUEIDENTIFIER, ForeignKey("patients.patient_id", ondelete="NO ACTION"), nullable=False)
+    doctor_id = Column(UNIQUEIDENTIFIER, ForeignKey("doctors.doctor_id"), nullable=False)
 
     diagnosis = Column(Text)
     test_results = Column(Text)
@@ -191,9 +187,9 @@ class MedicalHistory(Base):
 class Inventory(Base):
     __tablename__ = "Inventory"
 
-    inventory_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(String(36), ForeignKey("Product.product_id", ondelete="CASCADE"), nullable=False)
+    inventory_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=False)
+    product_id = Column(UNIQUEIDENTIFIER, ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=False)
 
     product_name = Column(String(255), nullable=False)   # nvarchar
     batch_no = Column(String(100), nullable=True)        # nvarchar
@@ -215,9 +211,9 @@ class Inventory(Base):
 class MedicalStore(Base):
     __tablename__ = "MedicalStore"
 
-    store_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))  # uniqueidentifier
+    store_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))  # uniqueidentifier
     store_name = Column(String(255), nullable=False)        # nvarchar
-    owner_id = Column(String(36), nullable=False)           # uniqueidentifier
+    owner_id = Column(UNIQUEIDENTIFIER, nullable=False)           # uniqueidentifier
     owner_name = Column(String(255), nullable=False)        # nvarchar
     age = Column(Integer, nullable=True)
     gender = Column(String(20), nullable=True)   # Example: "Male", "Female", "Other"
@@ -256,7 +252,7 @@ class MedicalStore(Base):
 class Supplier(Base):
     __tablename__ = "Supplier"
 
-    supplier_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))  # uuid string
+    supplier_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))  # uuid string
     supplier_name = Column(String(255), nullable=False)
     contact_name = Column(String(255), nullable=True)
     age = Column(Integer, nullable=True)
@@ -267,10 +263,10 @@ class Supplier(Base):
     city = Column(String(100), nullable=True)
     pin_code = Column(String(20), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=True)
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=True)
 
     # New field to link the creator (chemist) user id
-    created_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by = Column(UNIQUEIDENTIFIER, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     store = relationship("MedicalStore", back_populates="suppliers")
     products = relationship("SupplierProduct", back_populates="supplier", cascade="all, delete-orphan")
@@ -286,7 +282,7 @@ class Supplier(Base):
 class Product(Base):
     __tablename__ = "Product"
 
-    product_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))  # uniqueidentifier
+    product_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))  # uniqueidentifier
     name = Column(String(255), nullable=False)             # nvarchar
     brand = Column(String(255), nullable=True)             # nvarchar
     generic_name = Column(String(255), nullable=True)      # nvarchar
@@ -311,14 +307,14 @@ class Product(Base):
 class Customer(Base):
     __tablename__ = "Customer"
 
-    customer_id = Column(String(36),ForeignKey("users.id", ondelete="CASCADE"),primary_key=True)
+    customer_id = Column(UNIQUEIDENTIFIER,ForeignKey("users.id", ondelete="NO ACTION"),primary_key=True)
     name = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=True)
     email = Column(String(255), nullable=True)
     age = Column(Integer, nullable=True)
     gender = Column(String(20), nullable=True)   # Example: "Male", "Female", "Other"
     address = Column(Text, nullable=True)
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=False)
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=False)
     role = Column (String(40))
     latitude = Column(Float, nullable=True)                 # float
     longitude = Column(Float, nullable=True)                # float
@@ -338,10 +334,10 @@ class Customer(Base):
 class Prescription(Base):
     __tablename__ = "Prescription"
 
-    prescription_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    customer_id = Column(String(36), ForeignKey("Customer.customer_id", ondelete="CASCADE"), nullable=True)
-    patient_id = Column(String(36),ForeignKey("patients.patient_id", ondelete="CASCADE"), nullable=True)
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=True)
+    prescription_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    customer_id = Column(UNIQUEIDENTIFIER, ForeignKey("Customer.customer_id", ondelete="NO ACTION"), nullable=True)
+    patient_id = Column(UNIQUEIDENTIFIER,ForeignKey("patients.patient_id", ondelete="NO ACTION"), nullable=True)
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=True)
     doctor_name = Column(String(255), nullable=True)
     notes = Column(Text, nullable=True)
     file_content = Column(LargeBinary, nullable=True)             # image
@@ -357,9 +353,9 @@ class Prescription(Base):
 class PrescriptionResponse(Base):
     __tablename__ = "PrescriptionResponse"
 
-    response_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    prescription_id = Column(String(36), ForeignKey("Prescription.prescription_id", ondelete="CASCADE"), nullable=False)
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id"), nullable=True)
+    response_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    prescription_id = Column(UNIQUEIDENTIFIER, ForeignKey("Prescription.prescription_id", ondelete="NO ACTION"), nullable=False)
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id"), nullable=True)
     status = Column(String(255), nullable=True)
     available_items_json = Column(String)
     message = Column(Text, nullable=True)
@@ -376,18 +372,18 @@ class PrescriptionResponse(Base):
 class Bill(Base):
     __tablename__ = "Bill"
 
-    bill_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    bill_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # Issuer: store or supplier
-    issuer_store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=True)
-    issuer_supplier_id = Column(String(36), ForeignKey("Supplier.supplier_id", ondelete="CASCADE"), nullable=True)
+    issuer_store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=True)
+    issuer_supplier_id = Column(UNIQUEIDENTIFIER, ForeignKey("Supplier.supplier_id", ondelete="NO ACTION"), nullable=True)
 
     # Recipient: patient or customer
-    customer_id = Column(String(36), ForeignKey("Customer.customer_id", ondelete="CASCADE"), nullable=True)
-    patient_id = Column(String(36), ForeignKey("patients.patient_id", ondelete="CASCADE"), nullable=True)
+    customer_id = Column(UNIQUEIDENTIFIER, ForeignKey("Customer.customer_id", ondelete="NO ACTION"), nullable=True)
+    patient_id = Column(UNIQUEIDENTIFIER, ForeignKey("patients.patient_id", ondelete="NO ACTION"), nullable=True)
 
     # Optional single product reference
-    product_id = Column(String(36), ForeignKey("Product.product_id", ondelete="CASCADE"), nullable=True)
+    product_id = Column(UNIQUEIDENTIFIER, ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=True)
 
     subtotal = Column(DECIMAL(18, 2), nullable=False, default=0)
     tax_amount = Column(DECIMAL(18, 2), nullable=False, default=0)
@@ -410,9 +406,9 @@ class Bill(Base):
 class BillItem(Base):
     __tablename__ = "BillItem"
 
-    bill_item_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    bill_id = Column(String(36), ForeignKey("Bill.bill_id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(String(36), ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=False)
+    bill_item_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    bill_id = Column(UNIQUEIDENTIFIER, ForeignKey("Bill.bill_id", ondelete="NO ACTION"), nullable=False)
+    product_id = Column(UNIQUEIDENTIFIER, ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=False)
 
     batch_no = Column(String(50), nullable=False)
     expiry_date = Column(Date, nullable=False)
@@ -431,15 +427,16 @@ class BillItem(Base):
 class SupplierProduct(Base):
     __tablename__ = "SupplierProduct"
 
-    supplier_product_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    supplier_id = Column(String(36), ForeignKey("Supplier.supplier_id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(String(36), ForeignKey("Product.product_id", ondelete="CASCADE"), nullable=False)
+    supplier_product_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    supplier_id = Column(UNIQUEIDENTIFIER, ForeignKey("Supplier.supplier_id", ondelete="NO ACTION"), nullable=False)
+    product_id = Column(UNIQUEIDENTIFIER, ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=False)
     
     # Match your DB columns exactly
     supplier_sku = Column(String(200), nullable=True)
     lead_time_days = Column(Integer, nullable=True)
     price = Column(DECIMAL(18, 2), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    latest_expiry_date = Column(Date, nullable=True)
 
     supplier = relationship("Supplier", back_populates="products")
     product = relationship("Product", back_populates="suppliers")
@@ -453,16 +450,16 @@ class SupplierProduct(Base):
 class Cart(Base):
     __tablename__ = "Cart"
 
-    cart_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=False)
+    cart_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(UNIQUEIDENTIFIER, ForeignKey("users.id", ondelete="NO ACTION"), nullable=False)
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    user = relationship("User")
     store = relationship("MedicalStore")
+    user = relationship("User", back_populates="cart")
     items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
 
 
@@ -472,13 +469,15 @@ class Cart(Base):
 class CartItem(Base):
     __tablename__ = "CartItem"
 
-    cart_item_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    cart_id = Column(String(36), ForeignKey("Cart.cart_id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(String(36), ForeignKey("Product.product_id", ondelete="CASCADE"), nullable=False)
+    cart_item_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    cart_id = Column(UNIQUEIDENTIFIER, ForeignKey("Cart.cart_id", ondelete="NO ACTION"), nullable=False)
+    product_id = Column(UNIQUEIDENTIFIER, ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     price = Column(DECIMAL(18, 2), nullable=False)
     subtotal = Column(DECIMAL(18, 2), Computed("quantity * price"))
+    source = Column(String, default="inventory")   # inventory or supplier
 
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -492,8 +491,8 @@ class Order(Base):
     __tablename__ = "Orders"
 
     order_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=uuid.uuid4)
-    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=False)
-    supplier_id = Column(UNIQUEIDENTIFIER, ForeignKey("Supplier.supplier_id", ondelete="CASCADE"), nullable=False)
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=False)
+    supplier_id = Column(UNIQUEIDENTIFIER, ForeignKey("Supplier.supplier_id", ondelete="NO ACTION"), nullable=False)
 
     order_date = Column(DateTime, server_default=func.sysutcdatetime())
     status = Column(String(50), nullable=False, default="pending")  # pending, confirmed, shipped, etc.
@@ -513,7 +512,7 @@ class OrderItem(Base):
     __tablename__ = "OrderItem"
 
     order_item_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=uuid.uuid4)
-    order_id = Column(UNIQUEIDENTIFIER, ForeignKey("Orders.order_id", ondelete="CASCADE"), nullable=False)
+    order_id = Column(UNIQUEIDENTIFIER, ForeignKey("Orders.order_id", ondelete="NO ACTION"), nullable=False)
     product_id = Column(UNIQUEIDENTIFIER, ForeignKey("Product.product_id", ondelete="NO ACTION"), nullable=False)
     supplier_id = Column(UNIQUEIDENTIFIER, ForeignKey("Supplier.supplier_id", ondelete="NO ACTION"), nullable=False)
 
@@ -538,9 +537,9 @@ class Payment(Base):
     __tablename__ = "Payment"
 
     payment_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=uuid.uuid4)
-    razorpay_order_id = Column(String(100), nullable=False, unique=True)
-    razorpay_payment_id = Column(String(100), nullable=True)
-    razorpay_signature = Column(String(255), nullable=True)
+    razorpay_order_id = Column(UNIQUEIDENTIFIER, nullable=False, unique=True)
+    razorpay_payment_id = Column(UNIQUEIDENTIFIER, nullable=True)
+    razorpay_signature = Column(UNIQUEIDENTIFIER, nullable=True)
 
     bill_id = Column(UNIQUEIDENTIFIER, ForeignKey("Bill.bill_id", ondelete="NO ACTION", onupdate="NO ACTION"), nullable=True)
     store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION", onupdate="NO ACTION"), nullable=True)
@@ -553,7 +552,7 @@ class Payment(Base):
     description = Column(String, nullable=True)
 
     is_refunded = Column(Boolean, default=False)
-    refund_id = Column(String(100), nullable=True)
+    refund_id = Column(UNIQUEIDENTIFIER, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.sysdatetime())
     updated_at = Column(DateTime(timezone=True), onupdate=func.sysdatetime(), server_default=func.sysdatetime())
@@ -584,8 +583,8 @@ class Subscription(Base):
     id = Column(UNIQUEIDENTIFIER, primary_key=True, default=uuid.uuid4)
     user_id = Column(UNIQUEIDENTIFIER, ForeignKey("users.id"), nullable=False)
     plan_id = Column(UNIQUEIDENTIFIER, ForeignKey("plans.id"), nullable=False)
-    razorpay_subscription_id = Column(String(100), unique=True, nullable=False)
-    razorpay_plan_id = Column(String(100), nullable=False)
+    razorpay_subscription_id = Column(UNIQUEIDENTIFIER, unique=True, nullable=False)
+    razorpay_plan_id = Column(UNIQUEIDENTIFIER, nullable=False)
     status = Column(Enum(SubscriptionStatus), default=SubscriptionStatus.created)
     start_date = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
@@ -604,8 +603,8 @@ class Subscription(Base):
 class StoreSettings(Base):
     __tablename__ = "StoreSettings"
 
-    store_settings_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=False)
+    store_settings_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=False)
 
     accepts_online_orders = Column(Boolean, nullable=False, default=True)   # bit
     notif_on_low_stock = Column(Boolean, nullable=False, default=True)      # bit
@@ -624,9 +623,9 @@ class StoreSettings(Base):
 class AuditLog(Base):
     __tablename__ = "AuditLog"
 
-    log_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    store_id = Column(String(36), ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(String(36), nullable=True)
+    log_id = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: str(uuid.uuid4()))
+    store_id = Column(UNIQUEIDENTIFIER, ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), nullable=False)
+    user_id = Column(UNIQUEIDENTIFIER, nullable=True)
     action = Column(String(255), nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
     details = Column(Text, nullable=True)
@@ -644,8 +643,8 @@ class MedicalStoreDashboard(Base):
     
     # store_id is set as the primary key to load the view row successfully.
     store_id = Column(
-        String(36), 
-        ForeignKey("MedicalStore.store_id", ondelete="CASCADE"), 
+        UNIQUEIDENTIFIER, 
+        ForeignKey("MedicalStore.store_id", ondelete="NO ACTION"), 
         primary_key=True, # <-- CRITICAL FIX
         nullable=False
     )

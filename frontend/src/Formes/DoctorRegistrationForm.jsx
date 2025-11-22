@@ -6,7 +6,7 @@ import Notification from "../Notification/Notification"; // Adjust path if neede
 import axios from "axios";
 import "./DoctorRegistrationForm.css";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "http://localhost:8000/api";
 
 function DoctorRegistrationForm() {
   const [formData, setFormData] = useState({

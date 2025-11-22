@@ -1,33 +1,24 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "⏳ Waiting for SQL Server to start..."
+# --- CRITICAL: Self-Correct Line Endings and Permissions ---
+# This ensures the script can execute correctly even if copied with CRLF line endings.
+tr -d '\r' < "$0" > /tmp/sqlcmd_cleaned && mv /tmp/sqlcmd_cleaned "$0"
+chmod +x "$0"
+# -----------------------------------------------------------
 
-while ! /opt/mssql-tools18/bin/sqlcmd -S "$DB_HOST,$DB_PORT" \
-     -U "$DB_USER" -P "$DB_PASSWORD" -Q "SELECT 1" -C > /dev/null 2>&1; do
-    echo "⏳ SQL Server not ready yet... retrying in 2s"
-    sleep 2
+echo "⏳ Checking SQL Server at $DB_HOST:$DB_PORT ..."
+
+# Wait until SQL Server responds
+until /opt/mssql-tools18/bin/sqlcmd -S "$DB_HOST,$DB_PORT" -U "$DB_USER" -P "$DB_PASSWORD" -Q "SELECT 1" -C > /dev/null 2>&1; do
+    echo "❌ SQL Server not ready — retrying..."
+    sleep 3
 done
 
-echo "✅ SQL Server is up!"
+echo "✅ SQL Server is ready"
 
-echo "🔍 Checking if database exists..."
-DB_CHECK=$(/opt/mssql-tools18/bin/sqlcmd -S "$DB_HOST,$DB_PORT" \
-     -U "$DB_USER" -P "$DB_PASSWORD" \
-     -Q "IF DB_ID(N'$DB_NAME') IS NOT NULL PRINT 'EXISTS'" -h -1 -C)
+echo "📦 Ensuring database [$DB_NAME] exists..."
+/opt/mssql-tools18/bin/sqlcmd -S "$DB_HOST,$DB_PORT" -U "$DB_USER" -P "$DB_PASSWORD" -C \
+-Q "IF NOT EXISTS(SELECT name FROM sys.databases WHERE name = '$DB_NAME') CREATE DATABASE [$DB_NAME];"
 
-if [ "$DB_CHECK" == "EXISTS" ]; then
-    echo "✅ Database $DB_NAME already exists"
-else
-    echo "📦 Creating database $DB_NAME"
-    /opt/mssql-tools18/bin/sqlcmd -S "$DB_HOST,$DB_PORT" \
-     -U "$DB_USER" -P "$DB_PASSWORD" \
-     -Q "CREATE DATABASE [$DB_NAME]" -C
-    echo "🎉 Database created!"
-fi
-
-echo "🚀 Running Alembic migrations..."
-alembic upgrade head
-
-echo "✅ Starting FastAPI server..."
-exec uvicorn main:app --host 0.0.0.0 --port 8000
+echo "✅ Database verified"

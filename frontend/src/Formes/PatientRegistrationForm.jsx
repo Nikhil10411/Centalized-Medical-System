@@ -5,7 +5,7 @@ import "./PatientRegistrationForm.css";
 import axios from "axios";
 import patientBackground from "../assets/User.jpeg"; // Adjust path to your image
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "http://localhost:8000/api";
 
 function PatientRegistrationForm() {
   const [formData, setFormData] = useState({

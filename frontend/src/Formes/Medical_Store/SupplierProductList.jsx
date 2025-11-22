@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./SupplierManagement.css";
 
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 const SupplierProductList = ({ supplierId, token }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ const SupplierProductList = ({ supplierId, token }) => {
       setError(null);
       try {
         const res = await axios.get(
-          `http://127.0.0.1:8000/medical_store/get_all_supplier/${supplierId}`,
+          `${API_BASE}/get_all_supplier/${supplierId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setProducts(res.data || []);

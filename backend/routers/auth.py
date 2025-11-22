@@ -19,17 +19,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from database import get_db
-from models import User, Doctor
-from schemas import (
-    UserCreate, UserResponse, Token, ForgotPasswordRequest,
-    ResetPasswordRequest
-)
+from models import *
+from schemas import *
 from utils.utils import hash_password, verify_password
-from utils.token_utils import (
-    build_token_for_user, decode_access_token, generate_reset_token,
-    decode_reset_token, admin_required, RoleEnum, blacklist_token, 
-    TOKEN_BLACKLIST, get_current_user
-)
+from utils.token_utils import *
 from utils.email_utils import send_reset_email
 from utils.dependencies import get_current_admin_user
 
@@ -172,7 +165,7 @@ def logout(
 
 
 # ──────────────────────────────────────────────────────────────
-# 5. Me / Token Debug
+# 5. Me / Token Debug (Updated for Registration Checks)
 # ──────────────────────────────────────────────────────────────
 @router.get("/me", response_model=UserResponse, tags=["Auth"])
 def me(token: str = Depends(oauth), db: Session = Depends(get_db)):
@@ -180,15 +173,34 @@ def me(token: str = Depends(oauth), db: Session = Depends(get_db)):
         payload = decode_access_token(token)
         email = payload.get("sub")
         if not email:
-            raise HTTPException(401, "Invalid token")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            raise HTTPException(404, "User not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
 
-        return user
+        # --- Registration Status Checks ---
+        is_doctor_registered = db.query(Doctor).filter(Doctor.user_id == user.id).first() is not None
+        is_patient_registered = db.query(Patient).filter(Patient.user_id == user.id).first() is not None
+        is_medical_store_registered = db.query(MedicalStore).filter(MedicalStore.user_id == user.id).first() is not None
+        # Add checks for other roles as needed (e.g., Chemist, Supplier, etc.)
+        
+        # FastAPI will map the fields of the User object and these new fields 
+        # (passed as keyword arguments) to the UserResponse schema.
+        return {
+            **user.__dict__, # Unpack existing user fields (id, username, email, role, etc.)
+            "is_doctor_registered": is_doctor_registered,
+            "is_patient_registered": is_patient_registered,
+            "is_medical_store_registered": is_medical_store_registered,
+            # Add other flags here
+        }
+        
     except JWTError:
-        raise HTTPException(401, "Invalid or expired token")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+    except Exception as e:
+        log.error(f"Error fetching user details: {e}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not retrieve user details.")
+    
 
 @router.get("/debug/token", tags=["Debug"])
 def debug_token(token: str = Depends(oauth)):
@@ -199,21 +211,27 @@ def debug_token(token: str = Depends(oauth)):
 
 
 # ──────────────────────────────────────────────────────────────
-# 6. Admin-only: TypingList & Delete Users
+# 6. Admin-only: List & Delete Users
 # ──────────────────────────────────────────────────────────────
+# NOTE: Using the 'admin_required' dependency, which checks user.is_admin=True.
+# Also, corrected the dependency format to use a list: dependencies=[Depends(...)]
+
 @router.get("/users", response_model=TypingList[UserResponse],
-            dependencies=[Depends(admin_required)], tags=["Admin"])
+            dependencies=[Depends(admin_required)], tags=["Admin"]) # <--- CORRECTED
 def list_users(db: Session = Depends(get_db)):
+    """List all users (Admin only)."""
     return db.query(User).all()
 
 @router.delete("/users/{user_id}", status_code=204,
                dependencies=[Depends(admin_required)], tags=["Admin"])
 def delete_user(user_id: UUID, db: Session = Depends(get_db)):
+    """Delete a user (Admin only)."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(404, "User not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
     if user.is_admin:
-        raise HTTPException(403, "Cannot delete an admin user")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Cannot delete an admin user")
 
     db.delete(user)
     db.commit()
+    return {"message": "User deleted"}

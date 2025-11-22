@@ -3,7 +3,7 @@ import "./PatientManagement.css";
 import axios from "axios";
 import Notification from "../../Notification/Notification"; // Adjust the import as needed
 
-const API_BASE = "http://127.0.0.1:8000/api"; // Adjust if your backend runs elsewhere
+const API_BASE = "http://localhost:8000/api";// Adjust if your backend runs elsewhere
 
 const initialForm = {
   name: "",

@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
 import Notification from "../../Notification/Notification";
 import "./Store.css";
 
+const API_BASE = "http://localhost:8000/api";
+
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [notification, setNotification] = useState({ message: "", type: "", isVisible: false });
   const [authToken, setAuthToken] = useState("");
+  const [userRole, setUserRole] = useState(null);
 
-  // Show notification helper
-  const showNotification = (message, type = "info") => {
+  const showNotification = useCallback((message, type = "info") => {
     setNotification({ message, type, isVisible: true });
     setTimeout(() => setNotification({ message: "", type: "", isVisible: false }), 3500);
-  };
+  }, []);
 
-  // Fetch all products on mount
+  // Fetch user role and product list on mount
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
@@ -24,13 +26,34 @@ const ProductList = () => {
     }
     setAuthToken(token);
 
-    const fetchProducts = async () => {
+    const fetchUserRole = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/inventory/all_stores", {
+        const res = await axios.get(`${API_BASE}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setProducts(res.data);
+        setUserRole(res.data.role);
+      } catch {
+        setUserRole(null);
+        showNotification("Failed to fetch user info.", "error");
+      }
+    };
+
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/inventory/all_stores`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (Array.isArray(res.data)) {
+          setProducts(res.data);
+        } else if (res.data.message === "No products available.") {
+          setProducts([]);
+          showNotification("No products available.", "info");
+        } else {
+          setProducts([]);
+          showNotification("Unexpected product data format", "error");
+        }
       } catch (err) {
+        setProducts([]);
         if (err.response?.status === 401) {
           showNotification("Session expired. Please log in again.", "error");
         } else {
@@ -38,54 +61,77 @@ const ProductList = () => {
         }
       }
     };
-    fetchProducts();
-  }, []);
 
-  // Fetch cart count from backend
-  const fetchCartCount = async () => {
+    fetchUserRole();
+    fetchProducts();
+  }, [showNotification]);
+
+  // Fetch cart count to update global cart badge
+  const fetchCartCount = useCallback(async () => {
     try {
-      // Fetch current cart contents
-      const res = await axios.get('http://127.0.0.1:8000/api/cart/view', {
+      const res = await axios.get(`${API_BASE}/cart/view`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
-      if (Array.isArray(res.data)) {
-        // Flatten all cart items to count total products (across stores)
-        let count = 0;
-        res.data.forEach(storeCart => {
-          if (Array.isArray(storeCart.items)) count += storeCart.items.length;
-        });
-        // Save to localStorage and fire event to update NavBar
+      if (res.data.items) {
+        const count = res.data.items.reduce((sum, i) => sum + i.quantity, 0);
         localStorage.setItem("cart_count", count);
         window.dispatchEvent(new CustomEvent("cartUpdated", { detail: count }));
       }
     } catch {
-      // fallback: reset displayed count
       localStorage.setItem("cart_count", 0);
       window.dispatchEvent(new CustomEvent("cartUpdated", { detail: 0 }));
     }
-  };
+  }, [authToken]);
 
-  // Add product to cart via backend API, then update cart count
-  const handleAddToCart = async (product) => {
-    try {
-      const url = `http://127.0.0.1:8000/api/add/cart/${product.product_id}?store_id=${product.store_id}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      if (res.ok) {
-        showNotification("Product added to cart.", "success");
-        // After successful add, fetch cart count from backend
-        fetchCartCount();
-      } else {
-        showNotification("Failed to add product to cart.", "error");
+  // Add to cart handler with role and source awareness
+  const handleAddToCart = useCallback(
+    async (product) => {
+      if (!authToken) {
+        showNotification("Please log in to add items to cart.", "error");
+        return;
       }
-    } catch {
-      showNotification("Failed to add product to cart.", "error");
-    }
-  };
+
+      const isSupplierProduct = product.type === "supplier_product";
+
+      // Only chemists can add supplier products
+      if (isSupplierProduct && userRole !== "chemist") {
+        showNotification("Only chemists can add supplier products.", "error");
+        return;
+      }
+
+      // Validate store ID for inventory products
+      if (!isSupplierProduct && !product.store_id) {
+        showNotification("Invalid store ID for this inventory product.", "error");
+        return;
+      }
+
+      try {
+        const source = isSupplierProduct ? "supplier" : "inventory";
+
+        // Compose add to cart URL with store_id query param if inventory
+        const params = new URLSearchParams();
+        if (source === "inventory") params.append("store_id", product.store_id);
+
+        const url = `${API_BASE}/add/cart/${product.product_id}?${params.toString()}`;
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || "Failed to add product to cart.");
+        }
+
+        showNotification("Product added to cart.", "success");
+        fetchCartCount();
+      } catch (e) {
+        showNotification(e.message || "Network error adding product.", "error");
+      }
+    },
+    [authToken, userRole, showNotification, fetchCartCount]
+  );
 
   return (
     <div className="store-container">
@@ -94,10 +140,14 @@ const ProductList = () => {
         type={notification.type}
         duration={3500}
         onClose={() => setNotification({ message: "", type: "", isVisible: false })}
+        isVisible={notification.isVisible}
       />
 
       <h2 className="page-title">
-        <span role="img" aria-label="med">🩺</span> Medical Store Products
+        <span role="img" aria-label="med">
+          🩺
+        </span>{" "}
+        Medical Store Products
       </h2>
 
       <div className="product-grid">
@@ -106,10 +156,11 @@ const ProductList = () => {
         ) : (
           products.map((product) => (
             <ProductCard
-              key={`${product.product_id}_${product.store_id}_${product.inventory_id}`}
+              key={`${product.product_id}_${product.store_id || "none"}_${product.inventory_id || product.supplier_product_id}`}
               product={product}
               onAddToCart={handleAddToCart}
               authToken={authToken}
+              userRole={userRole}
             />
           ))
         )}
@@ -119,3 +170,4 @@ const ProductList = () => {
 };
 
 export default ProductList;
+

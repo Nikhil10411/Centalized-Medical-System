@@ -160,7 +160,7 @@ def update_doctor(
     return doctor
 
 # ----------------------------------------------------------------------------------
-# 5. DELETE Doctor Profile
+# 5. DELETE Doctor Profile (FIXED for ON DELETE NO ACTION)
 # ----------------------------------------------------------------------------------
 @router.delete("/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_doctor(
@@ -169,6 +169,7 @@ def delete_doctor(
     current_user_id: str = Depends(get_current_doctor_user_id),
     db: Session = Depends(get_db)
 ):
+    # 1. Authorize and Find the Doctor Profile
     doctor = db.query(Doctor).filter(Doctor.doctor_id == doctor_id).first()
     if not doctor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
@@ -180,5 +181,33 @@ def delete_doctor(
             detail="You can only delete your own doctor profile."
         )
 
-    db.delete(doctor)
-    db.commit()
+    # 2. Find the associated User account (Parent)
+    # Since doctor_id IS the user_id, we use the same ID
+    user_account = db.query(User).filter(User.id == doctor_id).first()
+    
+    # Safety Check (should ideally never be false if data integrity is maintained)
+    if not user_account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Associated user account not found."
+        )
+
+    try:
+        # 3. MANUAL CASCADE DELETION: Delete the child record first.
+        # This removes the Doctor profile data.
+        db.delete(doctor)
+        
+        # 4. Delete the parent record.
+        # This removes the core User account (username, password, etc.).
+        db.delete(user_account)
+        
+        # 5. Commit the transaction
+        db.commit()
+    
+    except Exception as e:
+        db.rollback()
+        # You may want better error logging here
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete doctor and user account: {e}")
+    
+    # Successful deletion returns 204 NO CONTENT (no return body needed)
+    return

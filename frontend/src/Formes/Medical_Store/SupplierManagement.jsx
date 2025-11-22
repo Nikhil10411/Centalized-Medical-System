@@ -8,8 +8,9 @@ import SupplierList from "./SupplierList";
 import Pagination from "./Pagination";
 import "./SupplierManagement.css";
 
+const API_BASE = "http://localhost:8000/api/medical_store";
+
 const emptySupplier = {
-  supplier_name: "",
   contact_name: "",
   phone: "",
   email: "",
@@ -69,7 +70,7 @@ export default function SupplierManagement() {
     try {
       const params = { ...search, page: p };
       const res = await axios.get(
-        "http://127.0.0.1:8000/medical_store/stores/suppliers/search",
+        `${API_BASE}/stores/suppliers/search`,
         {
           params,
           headers: { Authorization: `Bearer ${token}` },
@@ -90,7 +91,7 @@ export default function SupplierManagement() {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://127.0.0.1:8000/medical_store/supplier/get_all_suppliers",
+        `${API_BASE}/supplier/get_all_suppliers`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuppliers(res.data || []);
@@ -116,7 +117,7 @@ export default function SupplierManagement() {
     setSelectedSupplier(supplier);
     try {
       const res = await axios.get(
-        `http://127.0.0.1:8000/medical_store/get_all_supplier/${supplier.supplier_id}`,
+        `${API_BASE}/get_all_supplier/${supplier.supplier_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSupplierProducts(res.data || []);
@@ -143,14 +144,14 @@ export default function SupplierManagement() {
     try {
       if (editId) {
         await axios.put(
-          `http://127.0.0.1:8000/medical_store/supplier/update/${editId}`,
+          `${API_BASE }/supplier/update/${editId}`,
           form,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setNotification({ type: "success", message: "Supplier updated!" });
       } else {
         await axios.post(
-          "http://127.0.0.1:8000/medical_store/supplier",
+          `${API_BASE}/supplier`,
           form,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -172,7 +173,7 @@ export default function SupplierManagement() {
   async function handleDelete(id) {
     if (!window.confirm("Delete this supplier?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/medical_store/supplier/${id}`, {
+      await axios.delete(`${API_BASE}/supplier/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotification({ type: "success", message: "Supplier deleted!" });
@@ -186,7 +187,7 @@ export default function SupplierManagement() {
     if (!window.confirm("Link this supplier to your store?")) return;
     try {
       await axios.post(
-        `http://127.0.0.1:8000/medical_store/supplier/link/${id}`,
+        `${API_BASE}/supplier/link/${id}`,
         null,
         { headers: { Authorization: `Bearer ${token}` } }
       );

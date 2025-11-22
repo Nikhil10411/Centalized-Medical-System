@@ -1,48 +1,47 @@
+
+
 services:
   # =============================
-  # ✅ 1. SQL SERVER DATABASE
+  # ✅ SQL SERVER DATABASE
   # =============================
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: mssql
     restart: always
-    # CRITICAL: Loads SA_PASSWORD from ./backend/.env
     env_file: 
       - ./backend/.env
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Express"
-      MSSQL_SA_PASSWORD_COMPLEXITY: "N" # Keeps complexity off, just in case.
     ports:
       - "1433:1433"
     volumes:
       - mssql_data:/var/opt/mssql
     healthcheck:
-      # FIX: Use single shell command with bash -c and reliable password variable substitution
-      # Using "$$SA_PASSWORD" inside the shell command is the most reliable syntax.
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$${SA_PASSWORD}\" -Q \"SELECT 1\" -C"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${SA_PASSWORD}\" -Q \"SELECT 1\" -C"]
       interval: 10s
-      timeout: 15s 
-      retries: 30 
-      start_period: 90s # Increased start period to 90s for safety on slower systems/Windows
+      timeout: 15s
+      retries: 30
+      start_period: 90s
     networks:
       - app_network
 
   # =============================
-  # ✅ 2. FASTAPI BACKEND
+  # ✅ FASTAPI BACKEND (VOLUME FIXED)
   # =============================
   medical-backend:
     build: ./backend
     container_name: medical-backend
     restart: always
-    env_file: 
+    env_file:
       - ./backend/.env
     environment:
-      DOCKER_ENV: "true" 
+      RUNNING_IN_DOCKER: "true"
     depends_on:
       mssql:
         condition: service_healthy
     volumes:
+      # 🌟 CRITICAL FIX: Restore the full code mount to sync models.py changes 🌟
       - ./backend:/app
     working_dir: /app
     entrypoint: ["/app/docker-entrypoint.sh"]
@@ -52,21 +51,21 @@ services:
       - app_network
 
   # =============================
-  # ✅ 3. FRONTEND (React + Nginx)
+  # ✅ REACT FRONTEND (NGINX)
   # =============================
   medical-frontend:
     build: ./frontend
     container_name: medical-frontend
     restart: always
     depends_on:
-      - medical-backend 
+      - medical-backend
     ports:
       - "3000:80"
     networks:
       - app_network
 
   # =============================
-  # ✅ 4. PROMETHEUS (Metrics Scraper)
+  # ✅ PROMETHEUS
   # =============================
   prometheus:
     image: prom/prometheus:latest
@@ -80,42 +79,38 @@ services:
       - app_network
 
   # =============================
-  # ✅ 5. LOKI (Log Aggregator)
-  # Fix: Ensure command uses the correct flag format for stability
+  # ✅ LOKI (v3)
   # =============================
   loki:
-    image: grafana/loki:2.9.2
+    image: grafana/loki:3.0.0
     container_name: loki
     restart: always
+    command: -config.file=/etc/loki/loki-config.yml -config.expand-env=true
     volumes:
       - ./frontend/monitoring/loki-config.yml:/etc/loki/loki-config.yml
-      - loki_data:/loki  # Persistent volume for log storage
-    command: -config.file=/etc/loki/loki-config.yml
+      - loki_data:/loki
     ports:
       - "3100:3100"
     networks:
       - app_network
 
   # =============================
-  # ✅ 6. PROMTAIL (Log Collector)
+  # ✅ PROMTAIL (v3)
   # =============================
   promtail:
-    image: grafana/promtail:2.9.2
+    image: grafana/promtail:3.0.0
     container_name: promtail
     restart: always
     volumes:
-      # Critical for scraping logs from other Docker containers
       - /var/run/docker.sock:/var/run/docker.sock
-      # Configuration file mount
       - ./frontend/monitoring/promtail-config.yml:/etc/promtail/promtail-config.yml
-      # Host logs (optional, primarily useful if /var/log is shared)
       - /var/log:/var/log:ro
     command: -config.file=/etc/promtail/promtail-config.yml
     networks:
       - app_network
 
   # =============================
-  # ✅ 7. GRAFANA (Visualization)
+  # ✅ Grafana
   # =============================
   grafana:
     image: grafana/grafana:latest
@@ -138,4 +133,4 @@ volumes:
 
 networks:
   app_network:
-    name: niksain_app_network
+    name: app_network
